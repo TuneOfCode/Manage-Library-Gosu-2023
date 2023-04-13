@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Responses;
+
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,9 +11,14 @@ trait BaseResponse {
     /**
      * Hàm định nghĩa cấu trúc trả về của API khi ở trạng thái thành công
      */
-    public function success(Request $request, mixed $data = null, 
-        $message = null, $messageCode = "OK", $statusCode = 200): JsonResponse {
-        if (is_array($data) || $data instanceof LengthAwarePaginator) {
+    public function success(
+        Request $request,
+        mixed $data = null,
+        $message = null,
+        $messageCode = "OK",
+        $statusCode = 200
+    ): JsonResponse {
+        if ($data instanceof LengthAwarePaginator) {
             return response()->json([
                 'status' => $messageCode,
                 'statusCode' => $statusCode,
@@ -26,9 +32,9 @@ trait BaseResponse {
                     'from' => $data->firstItem(),
                     'to' => $data->lastItem()
                 ],
-                'time' => Carbon::now()->format('d-m-Y H:i:s A'),
-                'path' => $request->getUri()
-            ]);
+                'time' => Carbon::now()->format('d/m/Y H:i:s A'),
+                'path' => $request->getRequestUri()
+            ], $statusCode);
         }
 
         return response()->json([
@@ -36,23 +42,27 @@ trait BaseResponse {
             'statusCode' => $statusCode,
             'message' => $message,
             'data' => $data,
-            'time' => Carbon::now()->format('d-m-Y H:i:s A'),
+            'time' => Carbon::now()->format('d/m/Y H:i:s A'),
             'path' => $request->getRequestUri()
-        ]);
+        ], $statusCode);
     }
     /**
      * Hàm định nghĩa cấu trúc trả về của API khi ở trạng thái thất bại
      */
-    public function error(Request $request, mixed $error = null, 
-        $message = null, $messageCode = "Internal Server Error", $statusCode = 500): JsonResponse {
-
+    public function error(
+        Request $request,
+        mixed $error = null,
+        $message = null,
+        $messageCode = "Internal Server Error",
+        $statusCode = 500
+    ): JsonResponse {
         return response()->json([
             'status' => $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
             'error' => $error,
-            'time' => Carbon::now()->format('d-m-Y H:i:s A'),
+            'time' => Carbon::now()->format('d/m/Y H:i:s A'),
             'path' => $request->getRequestUri()
-        ]);
+        ], $statusCode);
     }
 }

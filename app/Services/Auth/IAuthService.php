@@ -1,22 +1,19 @@
 <?php
 
 namespace App\Services\Auth;
-use App\Http\Requests\V1\Auth\ChangePasswordRequest;
-use App\Http\Requests\V1\Auth\LoginRequest;
-use App\Http\Requests\V1\Auth\RegisterRequest;
-use App\Http\Requests\V1\Auth\UpdateMeRequest;
+
 /**
  * Hợp đồng 
  */
-interface IAuthSerice {
+interface IAuthService {
     /**
      * Dịch vụ đăng ký thành viên hiện tại
      */
-    public function register(RegisterRequest $registerData);
+    public function register(mixed $registerData);
     /**
      * Dịch vụ đăng nhập thành viên hiện tại
      */
-    public function login(LoginRequest $loginData);
+    public function login(mixed $loginData);
     /**
      * Dịch vụ hiển thị thông tin thành viên hiện tại
      */
@@ -28,9 +25,9 @@ interface IAuthSerice {
     /**
      * Dịch vụ thay đổi mật khẩu của thành viên hiện tại
      */
-    public function changePassword(ChangePasswordRequest $changePassData);
+    public function changePassword(mixed $changePassData);
     /**
      * Dịch vụ cập nhật thông tin của thành viên hiện tại
      */
-    public function updateMe(UpdateMeRequest $updateMeData);
+    public function updateMe(mixed $updateMeData);
 }

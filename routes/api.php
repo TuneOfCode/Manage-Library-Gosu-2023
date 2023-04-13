@@ -17,18 +17,24 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 /**
  * API version 1
  */
 Route::group([
-    'prefix'=>'v1',
+    'prefix' => 'v1',
     // 'namespace'=>' App\Http\Controllers\APIs\V1'
-], function() {
-    Route::apiResource('/auth', AuthController::class);
-    Route::apiResource('/users', UserController::class);
-    Route::apiResource('/packages', PackageController::class);
+], function () {
+    Route::post('auth/register', [AuthController::class, 'register']);
+    Route::post('auth/login', [AuthController::class, 'login']);
+    // Route::get('auth/me', [AuthController::class, 'me']);
+    // Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    // Route::post('auth/change-password', [AuthController::class, 'changePassword']);
+    // Route::post('auth/update-me', [AuthController::class, 'updateMe']);
+
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('packages', PackageController::class);
 });
