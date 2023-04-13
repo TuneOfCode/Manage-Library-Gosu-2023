@@ -41,4 +41,15 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    /**
+     * Bật created_at và updated_at
+     */
+    public $timestamps = true;
+    /**
+     * 
+     * Một thành viên chỉ đăng ký đúng một gói
+     */
+    public function package() {
+        return $this->belongsTo(Package::class);
+    }
 }

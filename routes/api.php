@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\APIs\V1\AuthController;
+use App\Http\Controllers\APIs\V1\PackageController;
+use App\Http\Controllers\APIs\V1\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +19,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+/**
+ * API version 1
+ */
+Route::group([
+    'prefix'=>'v1',
+    // 'namespace'=>' App\Http\Controllers\APIs\V1'
+], function() {
+    Route::apiResource('/auth', AuthController::class);
+    Route::apiResource('/users', UserController::class);
+    Route::apiResource('/packages', PackageController::class);
 });
