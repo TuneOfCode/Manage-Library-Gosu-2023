@@ -2,6 +2,7 @@
 
 namespace App\Http\Responses;
 
+use App\Constants\GlobalConstant;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,12 @@ trait BaseResponse {
         Request $request,
         mixed $data = null,
         $message = null,
-        $messageCode = "OK",
-        $statusCode = 200
+        $statusCode = 200,
+        $messageCode = "OK"
     ): JsonResponse {
         if ($data instanceof LengthAwarePaginator) {
             return response()->json([
-                'status' => $messageCode,
+                'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
                 'statusCode' => $statusCode,
                 'message' => $message,
                 'data' => $data->items(),
@@ -32,17 +33,17 @@ trait BaseResponse {
                     'from' => $data->firstItem(),
                     'to' => $data->lastItem()
                 ],
-                'time' => Carbon::now()->format('d/m/Y H:i:s A'),
+                'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
                 'path' => $request->getRequestUri()
             ], $statusCode);
         }
 
         return response()->json([
-            'status' => $messageCode,
+            'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
             'data' => $data,
-            'time' => Carbon::now()->format('d/m/Y H:i:s A'),
+            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
         ], $statusCode);
     }
@@ -51,17 +52,42 @@ trait BaseResponse {
      */
     public function error(
         Request $request,
-        mixed $error = null,
+        \Throwable $error = null,
         $message = null,
-        $messageCode = "Internal Server Error",
-        $statusCode = 500
+        $statusCode = 500,
+        $messageCode = "Internal Server Error"
     ): JsonResponse {
+        $statusCode = $error->getCode() ?? $statusCode;
+        if (
+            $error instanceof \Illuminate\Validation\ValidationException
+            || $error instanceof \Illuminate\Auth\Access\AuthorizationException
+        ) {
+            return response()->json([
+                'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
+                'statusCode' => $statusCode,
+                'message' => $message,
+                'error' => [
+                    'code' => $error->getCode(),
+                    'message' => $error->getMessage(),
+                    // 'file' => $error->getFile(),
+                    // 'line' => $error->getLine(),
+                ],
+                'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
+                'path' => $request->getRequestUri()
+            ], $statusCode);
+        }
         return response()->json([
-            'status' => $messageCode,
+            'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
-            'error' => $error,
-            'time' => Carbon::now()->format('d/m/Y H:i:s A'),
+            'error' => [
+                'code' => $error->getCode(),
+                'message' => $error->getMessage(),
+                'content' => null,
+                // 'file' => $error->getFile(),
+                // 'line' => $error->getLine(),
+            ],
+            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
         ], $statusCode);
     }

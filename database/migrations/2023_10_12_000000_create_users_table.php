@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->string('username')->unique();
             $table->string('password');
-            $table->string('avatar')->nullable();
+            $table->string('avatar')->default('https://via.placeholder.com/640x480.png');
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->integer('score')->default(100);

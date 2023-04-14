@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\APIs\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Requests\V1\Auth\RegisterRequest;
 use App\Http\Responses\BaseResponse;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller {
@@ -31,56 +31,44 @@ class AuthController extends Controller {
     public function register(RegisterRequest $registerData) {
         Log::info("***** Đăng ký thành viên mới *****");
         try {
-            $newUser = [
-                "full_name" => $registerData["full_name"],
-                "email" => $registerData["email"],
-                'username' => $registerData["username"],
-                'password' => Hash::make($registerData['password']), // Hash::make('password
-            ];
-            $newUser = $this->authService->register($newUser);
-            Log::info($registerData);
-            Log::info($newUser);
-            $data = [
-                "id" => $newUser["id"],
-                'tokenType' => 'Bearer',
-                "token" => $newUser->createToken('authToken')->plainTextToken,
-            ];
-            return $this->success($registerData, $data, "Đăng ký thành công!");
+            // gọi dịch vụ đăng ký thành viên mới
+            $data = $this->authService->register($registerData);
+            return $this->success($registerData, $data, "Đăng ký thành công!", 201);
         } catch (\Throwable $th) {
-            $error = $th->getMessage();
-            return $this->error($registerData, $error, "Đăng ký thất bại!");
+            return $this->error($registerData, $th, "Đăng ký thất bại!");
+        }
+    }
+    /**
+     * Điều hướng xác thực email
+     */
+    public function verifyEmail(Request $request) {
+        Log::info("***** Xác thực email *****");
+        dd("xác thực email");
+    }
+    /**
+     * Điều hướng về đăng nhập thành viên
+     */
+    public function login(LoginRequest $loginData) {
+        Log::info("***** Đăng nhập thành viên *****");
+        try {
+            // gọi dịch vụ xử lý đăng nhập
+            $data = $this->authService->login($loginData->toArray());
+            return $this->success($loginData, $data, "Đăng nhập thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($loginData, $th, "Đăng nhập thất bại!");
         }
     }
     /**
      * Điều hướng về bản thân thành viên hiện tại
      */
-    public function me() {
-    }
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id) {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id) {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id) {
-        //
+    public function me(Request $request) {
+        Log::info("***** Thông tin thành viên hiện tại *****");
+        try {
+            // gọi dịch vụ xử lý đăng nhập
+            $data = $this->authService->me();
+            return $this->success($request, $data, "Lấy thông tin thành viên hiện tại thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Lấy thông tin thành viên hiện tại thất bại");
+        }
     }
 }
