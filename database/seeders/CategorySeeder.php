@@ -2,20 +2,20 @@
 
 namespace Database\Seeders;
 
-use App\Models\Package;
+use App\Models\Category;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PackageSeeder extends Seeder
+class CategorySeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Package::factory()
+        Category::factory()
             ->count(1)
-            ->hasUsers(20)
+            ->hasBooks(30)
             ->create();
     }
 }

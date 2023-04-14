@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Package;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,10 +12,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Package::factory()
-            ->count(1)
-            ->hasUsers(20)
-            ->create();
+        $this->call([
+            PackageSeeder::class,
+            CategorySeeder::class
+        ]);
         // \App\Models\User::factory(10)->create();
 
         // \App\Models\User::factory()->create([

@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\APIs\V1\AuthController;
+use App\Http\Controllers\APIs\V1\CategoryController;
 use App\Http\Controllers\APIs\V1\PackageController;
 use App\Http\Controllers\APIs\V1\UserController;
+use App\Http\Controllers\APIs\V1\BookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +33,9 @@ Route::group([
     Route::apiResource('/auth', AuthController::class);
     Route::apiResource('/users', UserController::class);
     Route::apiResource('/packages', PackageController::class);
+    Route::apiResource('/books', BookController::class);
+    Route::apiResource('/categories', CategoryController::class);
+
+  //test 
+   //Route::post('books', [BookController::class, 'store'])->name('books.store');
 });

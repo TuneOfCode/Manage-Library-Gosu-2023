@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\V1\Package;
+namespace App\Http\Requests\V1\Category;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePackageRequest extends FormRequest
+class StoreCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,8 @@ class StorePackageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string',
-            'price'=>'required|integer'
+            'name'=>'required|string',
+
         ];
     }
 }

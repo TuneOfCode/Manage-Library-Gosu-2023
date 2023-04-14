@@ -5,25 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Package extends Model
+class Book extends Model
 {
     use HasFactory;
-    /**
-     * Những thuộc tính cho phép có
-     */
     protected $fillable = [
         'name',
+        'quantity',
         'price',
-        // 'isActive'
+        'loan_price',
+        'status',
+        'author',
+        'published_at',
+        'category_id'
     ];
     /**
      * Bật created_at và updated_at
      */
     public $timestamps = true;
     /**
-     * Một gói có nhiều thành viên sử dụng
+     * Mộ sách chỉ có 1 loại
+     *
      */
-    public function users() {
-        return $this->hasMany(User::class);
-    }
+    public function category() {
+        return $this->belongsTo(Category::class);
+        }
 }

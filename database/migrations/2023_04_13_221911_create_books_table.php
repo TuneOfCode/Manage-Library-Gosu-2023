@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('packages', function (Blueprint $table) {
+        Schema::create('books', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('cascade');
+            $table->string('name');
+            $table->integer('quantity');
             $table->integer('price');
-            $table->boolean('isActive')->default(true);
+            $table->integer('loan_price');
+            $table->boolean('status')->default('1');
+            $table->string('author');
+            $table->dateTime('published_at');
             $table->timestamps();
         });
     }
@@ -25,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('packages');
+        Schema::dropIfExists('books');
     }
 };

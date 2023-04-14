@@ -5,25 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Package extends Model
+class Category extends Model
 {
     use HasFactory;
     /**
-     * Những thuộc tính cho phép có
+     * Dữ liệu cho phép
      */
     protected $fillable = [
-        'name',
-        'price',
-        // 'isActive'
+        'name'
     ];
     /**
      * Bật created_at và updated_at
      */
     public $timestamps = true;
-    /**
-     * Một gói có nhiều thành viên sử dụng
+     /**
+     * Một loại sách có nhiều sách
      */
-    public function users() {
-        return $this->hasMany(User::class);
+    public function books() {
+        return $this->hasMany(Book::class);
     }
 }
