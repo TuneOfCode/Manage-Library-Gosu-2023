@@ -3,13 +3,16 @@
 namespace App\Services\Auth;
 
 use App\Constants\GlobalConstant;
+use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
 use App\Repositories\User\UserRepository;
-use Carbon\Carbon;
 use DateTime;
 use DateTimeZone;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+
 
 class AuthService implements IAuthService {
     /**
@@ -58,19 +61,31 @@ class AuthService implements IAuthService {
     public function login(mixed $loginData) {
         // kiểm tra đăng nhập
         if (!Auth::attempt($loginData)) {
-            throw new \Exception("Tên đăng nhập hoặc mật khẩu không chính xác", 400);
+            throw new \Exception("Tên đăng nhập hoặc mật khẩu không chính xác", BaseHTTPResponse::$BAD_REQUEST);
         }
+        $authUser = Auth::user();
         // kiểm tra thành viên đã xác thực email hay chưa
-        $emailVerifiedAt = Auth::user()->attributesToArray()['email_verified_at'];
+        $emailVerifiedAt = $authUser->attributesToArray()['email_verified_at'];
         if (empty($emailVerifiedAt)) {
-            throw new \Exception("Chưa xác nhận email", 401);
+            // test gửi email
+            $email = $authUser->attributesToArray()['email'];
+            $mailable = new Mailable();
+            $mailable->subject("Xác thực email $email");
+            $mailable->view('testEmail', [
+                "name" => $authUser->attributesToArray()['full_name'],
+                "email" => $email,
+                'link' => 'https://tool.gosu.vn/login'
+            ]);
+            Mail::to($email)->send($mailable);
+            dd("Gửi mail thành công: $email");
+            throw new \Exception("Chưa xác nhận email", BaseHTTPResponse::$UNAUTHORIZED);
         }
         // kiểm tra tài khoản có bị khoá hay không
-        $accountStatus = Auth::user()->attributesToArray()['status'];
+        $accountStatus = $authUser->attributesToArray()['status'];
         if ($accountStatus == 0) {
-            throw new \Exception("Tài khoản này đã bị khoá", 401);
+            throw new \Exception("Tài khoản này đã bị khoá", BaseHTTPResponse::$UNAUTHORIZED);
         }
-        $personalToken = Auth::user()->createToken(GlobalConstant::$AUTH_TOKEN);
+        $personalToken = $authUser->createToken(GlobalConstant::$AUTH_TOKEN);
         $datetimeExpiresAt = new DateTime(
             $personalToken->token->attributesToArray()['expires_at'],
             new DateTimeZone('UTC')

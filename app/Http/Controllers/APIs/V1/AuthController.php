@@ -5,6 +5,7 @@ namespace App\Http\Controllers\APIs\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Requests\V1\Auth\RegisterRequest;
+use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class AuthController extends Controller {
         try {
             // gọi dịch vụ đăng ký thành viên mới
             $data = $this->authService->register($registerData);
-            return $this->success($registerData, $data, "Đăng ký thành công!", 201);
+            return $this->success($registerData, $data, "Đăng ký thành công!", BaseHTTPResponse::$CREATED);
         } catch (\Throwable $th) {
             return $this->error($registerData, $th, "Đăng ký thất bại!");
         }

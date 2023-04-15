@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 
 trait BaseResponse {
     /**
@@ -52,38 +53,31 @@ trait BaseResponse {
      */
     public function error(
         Request $request,
-        \Throwable $error = null,
+        mixed $error = null,
         $message = null,
         $statusCode = 500,
         $messageCode = "Internal Server Error"
     ): JsonResponse {
-        $statusCode = $error->getCode() ?? $statusCode;
-        if (
-            $error instanceof \Illuminate\Validation\ValidationException
-            || $error instanceof \Illuminate\Auth\Access\AuthorizationException
-        ) {
-            return response()->json([
-                'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
-                'statusCode' => $statusCode,
-                'message' => $message,
-                'error' => [
-                    'code' => $error->getCode(),
-                    'message' => $error->getMessage(),
-                    // 'file' => $error->getFile(),
-                    // 'line' => $error->getLine(),
-                ],
-                'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
-                'path' => $request->getRequestUri()
-            ], $statusCode);
+        $statusCode = (empty($error->getCode())
+            || $error->getCode() === 0)
+            ? $statusCode
+            : $error->getCode();
+        $message = (empty($error->getMessage()))
+            ? $message
+            : $error->getMessage();
+        $content = null;
+
+        if ($error instanceof ValidationException) {
+            $content = $error->errors();
         }
         return response()->json([
             'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
             'error' => [
-                'code' => $error->getCode(),
-                'message' => $error->getMessage(),
-                'content' => null,
+                'code' => $statusCode,
+                'message' => $message,
+                'content' => $content,
                 // 'file' => $error->getFile(),
                 // 'line' => $error->getLine(),
             ],

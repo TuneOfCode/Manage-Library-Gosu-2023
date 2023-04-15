@@ -2,10 +2,8 @@
 
 namespace App\Exceptions;
 
-use App\Constants\GlobalConstant;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
-use Carbon\Carbon;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
@@ -57,40 +55,12 @@ class Handler extends ExceptionHandler {
      * Xử lý ngoại lệ không được uỷ quyền
      */
     protected function unauthenticated($request, AuthenticationException $error) {
-        $statusCode = 401;
-        return response()->json([
-            'status' => BaseHTTPResponse::$HTTP[$statusCode],
-            'statusCode' => $statusCode,
-            'message' => $error->getMessage(),
-            'error' => [
-                'code' => $statusCode,
-                'message' => $error->getMessage(),
-                'content' => null,
-                // 'file' => $error->getFile(),
-                // 'line' => $error->getLine(),
-            ],
-            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
-            'path' => $request->getRequestUri()
-        ], $statusCode);
+        return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNAUTHORIZED);
     }
     /**
      * Xử lý ngoại lệ yêu cầu từ client
      */
     public function convertValidationExceptionToResponse(ValidationException $error, $request) {
-        $statusCode = 422;
-        return response()->json([
-            'status' => BaseHTTPResponse::$HTTP[$statusCode],
-            'statusCode' => $statusCode,
-            'message' => $error->getMessage(),
-            'error' => [
-                'code' => $statusCode,
-                'message' => $error->getMessage(),
-                'content' => $error->errors(),
-                // 'file' => $error->getFile(),
-                // 'line' => $error->getLine(),
-            ],
-            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
-            'path' => $request->getRequestUri()
-        ], $statusCode);
+        return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNPROCESSABLE_ENTITY);
     }
 }
