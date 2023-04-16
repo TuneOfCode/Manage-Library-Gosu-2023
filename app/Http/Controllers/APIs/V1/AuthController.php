@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\APIs\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Requests\V1\Auth\RegisterRequest;
 use App\Http\Responses\BaseHTTPResponse;
@@ -82,6 +83,19 @@ class AuthController extends Controller {
             return $this->success($request, $data, "Lấy thông tin thành viên hiện tại thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Lấy thông tin thành viên hiện tại thất bại");
+        }
+    }
+    /**
+     * Điều hường về quên mật khẩu
+     */
+    public function forgotPassword(ForgotPasswordRequest $request) {
+        Log::info("***** Quên mật khẩu *****");
+        try {
+            // gọi dịch vụ xử lý đăng nhập
+            $data = $this->authService->forgotPassword($request->email);
+            return $this->success($request, $data, "Tạo mật khẩu mới và gửi email quên mật khẩu thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Tạo mật mới hoặc gửi email quên mật khẩu thất bại!");
         }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Constants\GlobalConstant;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
+use App\Mail\ForgotPassword;
 use App\Mail\VerifyEmail;
 use App\Models\User;
 use App\Repositories\User\UserRepository;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Passport\Token;
+use Illuminate\Support\Str;
 
 class AuthService implements IAuthService {
     /**
@@ -71,7 +73,7 @@ class AuthService implements IAuthService {
     public function verifyEmail(mixed $verifyEmailData) {
         $id = $verifyEmailData['id'];
         $token = $verifyEmailData['token'];
-        $user = $this->userRepo->findOne($id);
+        $user = $this->userRepo->findById($id);
         // kiểm tra thành viên có tồn tại
         if (empty($user)) {
             throw new \Exception("Thành viên không tồn tại", BaseHTTPResponse::$NOT_FOUND);
@@ -171,7 +173,29 @@ class AuthService implements IAuthService {
      * @return
      */
     public function forgotPassword(string $email) {
-        return [];
+        // trường hợp người dùng đã đăng nhập
+        if (Auth::check()) {
+            throw new \Exception("Bạn đã đăng nhập", BaseHTTPResponse::$BAD_REQUEST);
+        }
+        // kiểm tra email có tồn tại trong CSDL
+        $user = $this->userRepo->findOne(['email' => $email]);
+        if (empty($user->email)) {
+            throw new \Exception("Email không tồn tại", BaseHTTPResponse::$NOT_FOUND);
+        }
+        // Tạo ngẫu nhiên mật khẩu và mã hoá nó
+        $password = Str::random(8);
+        $hashPassword = Hash::make($password);
+        // Lưu mật khẩu mới vào CSDL
+        $this->userRepo->update(['password' => $hashPassword], $user->id);
+        $user['password'] = $password;
+        // Gửi email cho người dùng
+        Mail::to($email)->send(new ForgotPassword($user));
+        $result = [
+            'id' => $user->id,
+            'newPassword' => $password,
+        ];
+
+        return $result;
     }
     /**
      * Dịch vụ thay đổi mật khẩu của thành viên hiện tại

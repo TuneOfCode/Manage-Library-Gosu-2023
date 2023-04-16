@@ -41,7 +41,7 @@ class UserController extends Controller {
      * Display the specified resource.
      */
     public function show(Request $request, string $id) {
-        $user = $this->userRepo->findOne($id);
+        $user = $this->userRepo->findById($id);
         if (empty($user)) {
             return $this->error($request, null, "Lỗi không tìm thấy người dùng");
         }

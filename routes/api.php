@@ -30,7 +30,7 @@ Route::group([
     Route::post('auth/verify-email', [AuthController::class, 'verifyEmail']);
     Route::middleware(GlobalConstant::$AUTH_MIDDLEWARE)
         ->get('auth/me', [AuthController::class, 'me']);
-    // Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('auth/forgot-password', [AuthController::class, 'forgotPassword']);
     // Route::post('auth/change-password', [AuthController::class, 'changePassword']);
     // Route::post('auth/update-me', [AuthController::class, 'updateMe']);
 
