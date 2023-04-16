@@ -55,13 +55,17 @@ abstract class BaseRepository implements IBaseRepository {
      * @return boolean|mixed
      */
     public function update(mixed $attributes, mixed $id) {
-        $item = $this->findOne($id);
+        $item = $this->_model::find($id);
         if (empty($item) || !isset($item)) {
             return false;
         }
 
-        $item->update($attributes);
-        return $item;
+        foreach ($attributes as $key => $value) {
+            $item[$key] = $value;
+        }
+
+        $item->save();
+        return true;
     }
     /**
      * Xóa một bản ghi

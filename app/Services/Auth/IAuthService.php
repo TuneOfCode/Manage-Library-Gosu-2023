@@ -11,6 +11,10 @@ interface IAuthService {
      */
     public function register(mixed $registerData);
     /**
+     * Dịch vụ xác thực mail thành viên hiện tại
+     */
+    public function verifyEmail(mixed $verifyEmailData);
+    /**
      * Dịch vụ đăng nhập thành viên hiện tại
      */
     public function login(mixed $loginData);

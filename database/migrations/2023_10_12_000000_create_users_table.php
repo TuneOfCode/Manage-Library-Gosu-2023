@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->boolean('status')->default(true);
             $table->decimal('balance', 10, 2)->default(0);
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('access_token', 1000)->nullable();
             $table->rememberToken();
             $table->foreignId('package_id')->default(1)->constrained('packages');
             $table->timestamps();

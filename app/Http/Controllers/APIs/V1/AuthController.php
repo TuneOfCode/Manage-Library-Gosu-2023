@@ -34,7 +34,7 @@ class AuthController extends Controller {
         try {
             // gọi dịch vụ đăng ký thành viên mới
             $data = $this->authService->register($registerData);
-            return $this->success($registerData, $data, "Đăng ký thành công!", BaseHTTPResponse::$CREATED);
+            return $this->success($registerData, $data, "Đăng ký thành công! Vui lòng vào email và xác nhận.", BaseHTTPResponse::$CREATED);
         } catch (\Throwable $th) {
             return $this->error($registerData, $th, "Đăng ký thất bại!");
         }
@@ -44,7 +44,19 @@ class AuthController extends Controller {
      */
     public function verifyEmail(Request $request) {
         Log::info("***** Xác thực email *****");
-        dd("xác thực email");
+        $verifyEmailData = [
+            "id" => $request->id,
+            "tokenType" => "Bearer",
+            "token" => $request->token,
+        ];
+
+        try {
+            // gọi dịch vụ xác thực email
+            $data = $this->authService->verifyEmail($verifyEmailData);
+            return $this->success($request, $data, "Xác thực email thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Xác thực thất bại!");
+        }
     }
     /**
      * Điều hướng về đăng nhập thành viên

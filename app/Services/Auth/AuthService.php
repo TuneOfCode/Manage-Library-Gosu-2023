@@ -5,14 +5,18 @@ namespace App\Services\Auth;
 use App\Constants\GlobalConstant;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
+use App\Mail\VerifyEmail;
+use App\Models\User;
 use App\Repositories\User\UserRepository;
 use DateTime;
 use DateTimeZone;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-
+use Laravel\Passport\Token;
 
 class AuthService implements IAuthService {
     /**
@@ -51,7 +55,63 @@ class AuthService implements IAuthService {
         ];
         // khi đăng ký thành công thì thành viên phải xác thực email 
         // mới có thể đăng nhập
+        // gửi mail cho thành viên khi đăng ký thành công
+        $id = $newUser['id'];
+        $token = $newUser->createToken(GlobalConstant::$AUTH_TOKEN)->accessToken;
+        $email = $registerDTO['email'];
+        $registerDTO['id'] = $id;
+        $registerDTO['token'] = $token;
+        Mail::to($email)->send(new VerifyEmail($registerDTO));
+
         return $data;
+    }
+    /**
+     * Dịch vụ xác thực mail thành viên hiện tại
+     */
+    public function verifyEmail(mixed $verifyEmailData) {
+        $id = $verifyEmailData['id'];
+        $token = $verifyEmailData['token'];
+        $user = $this->userRepo->findOne($id);
+        // kiểm tra thành viên có tồn tại
+        if (empty($user)) {
+            throw new \Exception("Thành viên không tồn tại", BaseHTTPResponse::$NOT_FOUND);
+        }
+        // kiểm tra thành viên đã xác thực email trước đó chưa
+        if (!empty($user->email_verified_at)) {
+            throw new \Exception("Thành viên đã xác thực email trước đó", BaseHTTPResponse::$BAD_REQUEST);
+        }
+        // Lấy khóa công khai
+        $publicKey = file_get_contents(storage_path(GlobalConstant::$OAUTH_PUBLIC_KEY));
+        $decode = JWT::decode($token, new Key($publicKey, GlobalConstant::$ALGORITHM));
+
+        $decodeID = $decode->jti;
+        $dataDecode = Token::where('id', $decodeID)->first()->attributesToArray();
+
+        // kiểm tra token có hợp lệ
+        if (
+            !is_array($dataDecode)
+            || (is_array($dataDecode) && count($dataDecode) === 0)
+            || $dataDecode['user_id'] != $id
+        ) {
+            throw new \Exception("Token không chính xác", BaseHTTPResponse::$UNAUTHORIZED);
+        }
+
+        $dataUpdate = [
+            'email_verified_at' => date(GlobalConstant::$FORMAT_DATETIME_DB, time()),
+            'access_token' => $token,
+        ];
+
+        // cập nhật lại thông tin thành viên
+        $this->userRepo->update($dataUpdate, $id);
+
+        $result = [
+            'id' => $user->id,
+            'tokenType' => 'Bearer',
+            'token' => $token,
+            'emailVerifiedAt' => $user->email_verified_at,
+        ];
+
+        return $result;
     }
     /**
      * Dịch vụ đăng nhập thành viên hiện tại
@@ -64,21 +124,18 @@ class AuthService implements IAuthService {
             throw new \Exception("Tên đăng nhập hoặc mật khẩu không chính xác", BaseHTTPResponse::$BAD_REQUEST);
         }
         $authUser = Auth::user();
+        $currentUser = $authUser->attributesToArray();
         // kiểm tra thành viên đã xác thực email hay chưa
-        $emailVerifiedAt = $authUser->attributesToArray()['email_verified_at'];
+        $emailVerifiedAt = $currentUser['email_verified_at'];
         if (empty($emailVerifiedAt)) {
-            // test gửi email
-            $email = $authUser->attributesToArray()['email'];
-            $mailable = new Mailable();
-            $mailable->subject("Xác thực email $email");
-            $mailable->view('testEmail', [
-                "name" => $authUser->attributesToArray()['full_name'],
-                "email" => $email,
-                'link' => 'https://tool.gosu.vn/login'
-            ]);
-            Mail::to($email)->send($mailable);
-            dd("Gửi mail thành công: $email");
-            throw new \Exception("Chưa xác nhận email", BaseHTTPResponse::$UNAUTHORIZED);
+            // gửi email khi người dùng đăng nhập vào mà chưa xác thực email
+            $id = $currentUser['id'];
+            $token = $authUser->createToken(GlobalConstant::$AUTH_TOKEN)->accessToken;
+            $email = $currentUser['email'];
+            $currentUser['id'] = $id;
+            $currentUser['token'] = $token;
+            Mail::to($email)->send(new VerifyEmail($currentUser));
+            throw new \Exception("Chưa xác nhận email. Hệ thống đã gửi mail cho bạn. Vui lòng vào email để xác thực!", BaseHTTPResponse::$UNAUTHORIZED);
         }
         // kiểm tra tài khoản có bị khoá hay không
         $accountStatus = $authUser->attributesToArray()['status'];

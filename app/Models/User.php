@@ -29,6 +29,7 @@ class User extends Authenticatable {
         'score',
         'status',
         'balance',
+        'access_token',
         'package_id',
     ];
 
