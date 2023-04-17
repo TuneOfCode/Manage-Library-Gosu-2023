@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\APIs\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Requests\V1\Auth\RegisterRequest;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
 use App\Services\Auth\AuthService;
+use App\Services\Auth\IAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +22,7 @@ class AuthController extends Controller {
     /**
      * Thuộc tính dịch vụ xử lý xác thực thành viên
      */
-    private AuthService $authService;
+    private IAuthService $authService;
     /**
      * Hàm tạo
      */
@@ -96,6 +98,19 @@ class AuthController extends Controller {
             return $this->success($request, $data, "Tạo mật khẩu mới và gửi email quên mật khẩu thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Tạo mật mới hoặc gửi email quên mật khẩu thất bại!");
+        }
+    }
+    /**
+     * Điều hướng về thay đổi mật khẩu của thành viên hiện tại
+     */
+    public function changePassword(ChangePasswordRequest $request) {
+        Log::info("***** Thay đổi mật khẩu *****");
+        try {
+            // gọi dịch vụ xử lý đăng nhập
+            $data = $this->authService->changePassword($request->toArray());
+            return $this->success($request, $data, "Thay đổi mật khẩu thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Thay đổi mật khẩu thất bại!");
         }
     }
 }

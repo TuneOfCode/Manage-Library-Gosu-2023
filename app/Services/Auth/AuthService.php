@@ -8,6 +8,7 @@ use App\Http\Responses\BaseResponse;
 use App\Mail\ForgotPassword;
 use App\Mail\VerifyEmail;
 use App\Models\User;
+use App\Repositories\User\IUserRepository;
 use App\Repositories\User\UserRepository;
 use DateTime;
 use DateTimeZone;
@@ -28,7 +29,7 @@ class AuthService implements IAuthService {
     /**
      * Thuộc tính kho dữ liệu của thành viên
      */
-    private UserRepository $userRepo;
+    private IUserRepository $userRepo;
     /**
      * Hàm khởi tạo
      */
@@ -203,7 +204,25 @@ class AuthService implements IAuthService {
      * @return
      */
     public function changePassword(mixed $changePassData) {
-        return [];
+        $user = Auth::user();
+        $id = $user->id;
+        $hashOldPassword = $user->password;
+        $oldPassword = $changePassData['oldPassword'];
+        // kiểm tra mật khẩu cũ có khớp với mật khẩu trong CSDL
+        if (!Hash::check($oldPassword, $hashOldPassword)) {
+            throw new \Exception("Mật khẩu cũ không đúng", BaseHTTPResponse::$BAD_REQUEST);
+        }
+        // Mã hoá mật khẩu mới
+        $newHashPassword = Hash::make($changePassData['newPassword']);
+        // Cập nhật mật khẩu mới vào CSDL
+        $this->userRepo->update(['password' => $newHashPassword], $id);
+
+        $result = [
+            'id' => $id,
+            'newPassword' => $changePassData['newPassword'],
+        ];
+
+        return $result;
     }
     /**
      * Dịch vụ cập nhật thông tin của thành viên hiện tại

@@ -5,7 +5,7 @@ namespace App\Repositories\User;
 use App\Models\User;
 use App\Repositories\BaseRepository;
 
-class UserRepository extends BaseRepository {
+class UserRepository extends BaseRepository implements IUserRepository {
     /**
      * Cài đặt hàm trừu tượng
      */
