@@ -7,10 +7,12 @@ use App\Http\Requests\V1\Auth\ChangePasswordRequest;
 use App\Http\Requests\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\V1\Auth\LoginRequest;
 use App\Http\Requests\V1\Auth\RegisterRequest;
+use App\Http\Requests\V1\Auth\UpdateMeRequest;
+use App\Http\Requests\V1\Auth\UploadAvatarRequest;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
+use App\Repositories\User\UserRepository;
 use App\Services\Auth\AuthService;
-use App\Services\Auth\IAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -20,14 +22,19 @@ class AuthController extends Controller {
      */
     use BaseResponse;
     /**
-     * Thuộc tính dịch vụ xử lý xác thực thành viên
-     */
-    private IAuthService $authService;
-    /**
      * Hàm tạo
      */
     public function __construct() {
-        $this->authService = new AuthService();
+        $this->middleware(
+            'auth:api',
+            ['except' => [
+                'login',
+                'register',
+                'forgotPassword',
+                'verifyEmail'
+            ]]
+        );
+        new AuthService(new UserRepository());
     }
     /**
      * Điều hướng về đăng ký thành viên mới
@@ -36,7 +43,7 @@ class AuthController extends Controller {
         Log::info("***** Đăng ký thành viên mới *****");
         try {
             // gọi dịch vụ đăng ký thành viên mới
-            $data = $this->authService->register($registerData);
+            $data = AuthService::register($registerData);
             return $this->success($registerData, $data, "Đăng ký thành công! Vui lòng vào email và xác nhận.", BaseHTTPResponse::$CREATED);
         } catch (\Throwable $th) {
             return $this->error($registerData, $th, "Đăng ký thất bại!");
@@ -55,7 +62,7 @@ class AuthController extends Controller {
 
         try {
             // gọi dịch vụ xác thực email
-            $data = $this->authService->verifyEmail($verifyEmailData);
+            $data = AuthService::verifyEmail($verifyEmailData);
             return $this->success($request, $data, "Xác thực email thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Xác thực thất bại!");
@@ -68,7 +75,7 @@ class AuthController extends Controller {
         Log::info("***** Đăng nhập thành viên *****");
         try {
             // gọi dịch vụ xử lý đăng nhập
-            $data = $this->authService->login($loginData->toArray());
+            $data = AuthService::login($loginData->toArray());
             return $this->success($loginData, $data, "Đăng nhập thành công!");
         } catch (\Throwable $th) {
             return $this->error($loginData, $th, "Đăng nhập thất bại!");
@@ -80,8 +87,8 @@ class AuthController extends Controller {
     public function me(Request $request) {
         Log::info("***** Thông tin thành viên hiện tại *****");
         try {
-            // gọi dịch vụ xử lý đăng nhập
-            $data = $this->authService->me();
+            // gọi dịch vụ xử lý hiển thị thông tin thành viên hiện tại
+            $data = AuthService::me();
             return $this->success($request, $data, "Lấy thông tin thành viên hiện tại thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Lấy thông tin thành viên hiện tại thất bại");
@@ -93,8 +100,8 @@ class AuthController extends Controller {
     public function forgotPassword(ForgotPasswordRequest $request) {
         Log::info("***** Quên mật khẩu *****");
         try {
-            // gọi dịch vụ xử lý đăng nhập
-            $data = $this->authService->forgotPassword($request->email);
+            // gọi dịch vụ xử lý quên mật khẩu
+            $data = AuthService::forgotPassword($request->email);
             return $this->success($request, $data, "Tạo mật khẩu mới và gửi email quên mật khẩu thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Tạo mật mới hoặc gửi email quên mật khẩu thất bại!");
@@ -106,11 +113,50 @@ class AuthController extends Controller {
     public function changePassword(ChangePasswordRequest $request) {
         Log::info("***** Thay đổi mật khẩu *****");
         try {
-            // gọi dịch vụ xử lý đăng nhập
-            $data = $this->authService->changePassword($request->toArray());
+            // gọi dịch vụ xử lý thay đổi mật khẩu
+            $data = AuthService::changePassword($request->toArray());
             return $this->success($request, $data, "Thay đổi mật khẩu thành công!");
         } catch (\Throwable $th) {
             return $this->error($request, $th, "Thay đổi mật khẩu thất bại!");
+        }
+    }
+    /**
+     * Điều hướng về cập nhật thông tin của thành viên hiện tại
+     */
+    public function updateMe(UpdateMeRequest $request) {
+        Log::info("***** Cập nhật thông tin thành viên hiện tại *****");
+        try {
+            // gọi dịch vụ xử lý cập nhật thông tin thành viên hiện tại
+            $data = AuthService::updateMe($request);
+            return $this->success($request, $data, "Cập nhật thông tin thành viên thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Cập nhật thông tin thành viên thất bại!");
+        }
+    }
+    /**
+     * Điều hướng về tải ảnh đại diện của thành viên hiện tại
+     */
+    public function uploadAvatar(UploadAvatarRequest $request) {
+        Log::info("***** Tải ảnh đại diện của thành viên hiện tại *****");
+        try {
+            // gọi dịch vụ xử lý tải ảnh đại diện của thành viên hiện tại
+            $data = AuthService::uploadAvatar($request);
+            return $this->success($request, $data, "Cập nhật ảnh đại diện thành viên thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Cập nhật ảnh đại diện thành viên thất bại!");
+        }
+    }
+    /**
+     * Điều hướng về refresh token
+     */
+    public function refreshToken(Request $request) {
+        Log::info("***** Làm mới token *****");
+        try {
+            // gọi dịch vụ xử lý làm mới token
+            $data = AuthService::refreshToken($request);
+            return $this->success($request, $data, "Nhận refresh token thành công!");
+        } catch (\Throwable $th) {
+            return $this->error($request, $th, "Nhận refresh token thất bại!");
         }
     }
 }

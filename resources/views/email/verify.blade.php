@@ -34,10 +34,6 @@
         padding: 8px 10px;
     }
 
-    #btnVerify {
-        cursor: pointer;
-    }
-
     .link {
         color: #fff;
         background-color: #e7650e;
@@ -49,6 +45,7 @@
         margin: 20px auto;
         display: block;
         font-weight: bold;
+        cursor: pointer !important;
     }
 
     footer {
@@ -58,6 +55,10 @@
     .copyright {
         padding-top: 20px;
         color: #f00;
+    }
+
+    .wrapper-content>.link {
+        cursor: pointer;
     }
 </style>
 
@@ -75,7 +76,7 @@
             <form action="{{ $link }}" method="post">
                 <input type="hidden" name="id" value="{{ $id }}">
                 <input type="hidden" name="token" value="{{ $token }}">
-                <button id="btnVerify" class="link" type="submit">Xác thực</button>
+                <button style="cursor: pointer;" class="link" type="submit">Xác thực</button>
             </form>
             <footer>
                 Cảm ơn rất nhiều,<br>

@@ -25,25 +25,35 @@ Route::group([
     'prefix' => 'v1',
     // 'namespace' => ' App\Http\Controllers\APIs\V1'
 ], function () {
+    #region Auth
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
     Route::post('auth/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::middleware(GlobalConstant::$AUTH_MIDDLEWARE)
-        ->get('auth/me', [AuthController::class, 'me']);
+    Route::get('auth/me', [AuthController::class, 'me']);
     Route::post(
         'auth/forgot-password',
         [AuthController::class, 'forgotPassword']
     );
-    Route::middleware(GlobalConstant::$AUTH_MIDDLEWARE)
-        ->patch(
-            'auth/change-password',
-            [AuthController::class, 'changePassword']
-        );
-    // Route::post('auth/update-me', [AuthController::class, 'updateMe']);
+    Route::patch(
+        'auth/change-password',
+        [AuthController::class, 'changePassword']
+    );
+    Route::patch(
+        'auth/update-me',
+        [AuthController::class, 'updateMe']
+    );
+    Route::post(
+        'auth/upload-avatar',
+        [AuthController::class, 'uploadAvatar']
+    );
+    Route::post('auth/refresh-token', [AuthController::class, 'refreshToken']);
+    #endregion
 
-    // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    //     return $request->user();
-    // });
+    #region Users
     Route::middleware(GlobalConstant::$AUTH_MIDDLEWARE)->apiResource('users', UserController::class);
+    #endregion
+
+    #region Packages
     Route::apiResource('packages', PackageController::class);
+    #endregion
 });

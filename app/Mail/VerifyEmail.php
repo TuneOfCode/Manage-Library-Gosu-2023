@@ -36,7 +36,7 @@ class VerifyEmail extends Mailable {
         $this->data[$this->EMAIL] = $user[$this->EMAIL];
         $this->data[$this->ID] = $user[$this->ID];
         $this->data[$this->TOKEN] = $user[$this->TOKEN];
-        $this->data[$this->LINK] = GlobalConstant::$BASE_VERIFY_EMAIL;
+        $this->data[$this->LINK] = config('app.url') . ':' . config('app.port') . GlobalConstant::$BASE_VERIFY_EMAIL;
     }
 
     /**

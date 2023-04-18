@@ -29,7 +29,6 @@ class User extends Authenticatable {
         'score',
         'status',
         'balance',
-        'access_token',
         'package_id',
     ];
 
@@ -41,6 +40,7 @@ class User extends Authenticatable {
     protected $hidden = [
         'password',
         'remember_token',
+        'refresh_token',
     ];
 
     /**
@@ -65,7 +65,7 @@ class User extends Authenticatable {
     /**
      *  Định nghĩa trường dữ liệu đầu vào cho xác thực
      */
-    public function findForPassport(string $username) {
-        return $this->where('username', $username)->first();
+    public function findForPassport($username) {
+        return self::where('username', $username)->first(); // change column name whatever you use in credentials
     }
 }
