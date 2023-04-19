@@ -1,26 +1,31 @@
 <?php
-
 namespace App\Models;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-
-class User extends Authenticatable
-{
+// use Laravel\Passport\HasApiTokens;
+class User extends Authenticatable {
     use HasApiTokens, HasFactory, Notifiable;
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'full_name',
         'email',
+        'username',
         'password',
+        'avatar',
+        'phone',
+        'address',
+        'score',
+        'status',
+        'balance',
+        //'access_token',
+        'package_id',
     ];
 
     /**
@@ -31,6 +36,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'refresh_token',
     ];
 
     /**
@@ -51,5 +57,11 @@ class User extends Authenticatable
      */
     public function package() {
         return $this->belongsTo(Package::class);
+    }
+    /**
+     *  Định nghĩa trường dữ liệu đầu vào cho xác thực
+     */
+    public function findForPassport($username) {
+        return self::where('username', $username)->first(); // change column name whatever you use in credentials
     }
 }

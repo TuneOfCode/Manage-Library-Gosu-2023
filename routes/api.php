@@ -35,7 +35,7 @@ Route::group([
     Route::apiResource('/packages', PackageController::class);
     Route::apiResource('/books', BookController::class);
     Route::apiResource('/categories', CategoryController::class);
-
+    Route::get('/products/search', 'BookController@search');
   //test 
    //Route::post('books', [BookController::class, 'store'])->name('books.store');
 });

@@ -6,7 +6,7 @@ interface IBaseRepository {
     /**
      * Hiển thị tất cả bản ghi
      */
-    public function findAll(int $pageSize);
+    public function findAll(array $attribute,int $pageSize);
     /**
      * Lấy ra chi tiết một bản ghi thông qua ID
      */

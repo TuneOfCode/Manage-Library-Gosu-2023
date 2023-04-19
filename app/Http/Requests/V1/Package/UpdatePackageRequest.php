@@ -11,7 +11,7 @@ class UpdatePackageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,18 @@ class UpdatePackageRequest extends FormRequest
      */
     public function rules(): array
     {
+        $method = $this->method();
+
+        if ($method == 'POT'){
         return [
-            //
+            'name' => 'required|string',
+            'price'=>'required|integer'
         ];
+        }else{
+            return [
+                'name' => ['sometimes','required|string'],
+                'price' => ['sometimes','required|integer']    
+            ];
+        }
     }
 }

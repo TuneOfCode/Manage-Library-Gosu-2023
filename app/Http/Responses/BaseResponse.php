@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Responses;
+use App\Constants\GlobalConstant;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,11 +11,16 @@ trait BaseResponse {
     /**
      * Hàm định nghĩa cấu trúc trả về của API khi ở trạng thái thành công
      */
-    public function success(Request $request, mixed $data = null, 
-        $message = null, $messageCode = "OK", $statusCode = 200): JsonResponse {
-        if (is_array($data) || $data instanceof LengthAwarePaginator) {
+    public function success(
+        Request $request,
+        mixed $data = null,
+        $message = null,
+        $statusCode = 200,
+        $messageCode = "OK"
+    ): JsonResponse {
+        if ($data instanceof LengthAwarePaginator) {
             return response()->json([
-                'status' => $messageCode,
+                'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
                 'statusCode' => $statusCode,
                 'message' => $message,
                 'data' => $data->items(),
@@ -26,33 +32,55 @@ trait BaseResponse {
                     'from' => $data->firstItem(),
                     'to' => $data->lastItem()
                 ],
-                'time' => Carbon::now()->format('d-m-Y H:i:s A'),
-                'path' => $request->getUri()
-            ]);
+                'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
+                'path' => $request->getRequestUri()
+            ], $statusCode);
         }
 
         return response()->json([
-            'status' => $messageCode,
+            'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
             'data' => $data,
-            'time' => Carbon::now()->format('d-m-Y H:i:s A'),
+            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
-        ]);
+        ], $statusCode);
     }
     /**
      * Hàm định nghĩa cấu trúc trả về của API khi ở trạng thái thất bại
      */
-    public function error(Request $request, mixed $error = null, 
-        $message = null, $messageCode = "Internal Server Error", $statusCode = 500): JsonResponse {
+    public function error(
+        Request $request,
+        mixed $error = null,
+        $message = null,
+        $statusCode = 500,
+        $messageCode = "Internal Server Error"
+    ): JsonResponse {
+        $statusCode = (empty($error->getCode())
+            || $error->getCode() === 0)
+            ? $statusCode
+            : $error->getCode();
+        $message = (empty($error->getMessage()))
+            ? $message
+            : $error->getMessage();
+        $content = null;
 
+        if ($error instanceof ValidationException) {
+            $content = $error->errors();
+        }
         return response()->json([
-            'status' => $messageCode,
+            'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
-            'error' => $error,
-            'time' => Carbon::now()->format('d-m-Y H:i:s A'),
+            'error' => [
+                'code' => $statusCode,
+                'message' => $message,
+                'content' => $content,
+                'file' => $error->getFile(),
+                'line' => $error->getLine(),
+            ],
+            'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
-        ]);
+        ], $statusCode);
     }
 }

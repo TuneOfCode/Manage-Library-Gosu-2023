@@ -28,8 +28,8 @@ abstract class BaseRepository implements IBaseRepository {
      * Hiển thị tất cả bản ghi
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function findAll(int $pageSize = 10) {
-        return $this->_model->paginate($pageSize);
+    public function findAll(array $attributes = [], int $pageSize = 10) {
+        return $this->_model->where($attributes)->paginate($pageSize);
     }
     /**
      * Lấy ra chi tiết một bản ghi
@@ -76,5 +76,4 @@ abstract class BaseRepository implements IBaseRepository {
         $item->delete();
         return $item;
     }
-
 }

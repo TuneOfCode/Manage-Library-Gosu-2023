@@ -11,7 +11,7 @@ class UpdateBookRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,39 @@ class UpdateBookRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        $method = $this->method();
+
+        if($method == 'PUT'){
+            return [
+            'name'=>['required'],
+            'quantity'=>['required'],
+            'price'=>['required'],
+            'loanPrice'=>['required'],
+            'status'=>['required'],
+            'author'=>['required'],
+            'publishedAt'=>['required'],
+            'categoryId' =>['required'],
+            ];
+        }else{
+            return [
+                'name'=>['sometimes','required'],
+                'quantity'=>['sometimes','required'],
+                'price'=>['sometimes','required'],
+                'loanPrice'=>['sometimes','required'],
+                'status'=>['sometimes','required'],
+                'author'=>['sometimes','required'],
+                'publishedAt'=>['sometimes','required'],
+                'categoryId' =>['sometimes','required'],
+                ];
+        }
     }
-}
+    protected function prepareForValidation(){
+        $this->merge(
+            [
+                'loan_price'=>$this->loanPrice,
+                'published_at'=>$this->publishedAt,
+                'category_id' => $this->categoryId
+            ]
+            );
+    } 
+}  
