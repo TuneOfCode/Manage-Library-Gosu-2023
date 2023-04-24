@@ -15,6 +15,10 @@ interface IAuthService {
      */
     public static function register(mixed $registerData);
     /**
+     * Dịch vụ gửi mã otp thông qua email của thành viên hiện tại
+     */
+    public static function sendOtpEmail(mixed $sendOtpEmailData);
+    /**
      * Dịch vụ xác thực mail thành viên hiện tại
      */
     public static function verifyEmail(mixed $verifyEmailData);

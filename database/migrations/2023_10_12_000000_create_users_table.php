@@ -21,6 +21,8 @@ return new class extends Migration {
             $table->integer('score')->default(100);
             $table->boolean('status')->default(true);
             $table->decimal('balance', 10, 2)->default(0);
+            $table->string('otp_email_code', 6)->nullable();
+            $table->timestamp('otp_email_expired_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('refresh_token', 1000)->nullable();
             $table->rememberToken();

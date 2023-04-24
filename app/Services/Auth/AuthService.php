@@ -3,6 +3,8 @@
 namespace App\Services\Auth;
 
 use App\Constants\GlobalConstant;
+use App\Constants\MessageConstant;
+use App\Constants\RoleConstant;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
 use App\Jobs\ForgotPasswordQueueJob;
@@ -15,8 +17,8 @@ use Firebase\JWT\Key;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Laravel\Passport\Token;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class AuthService implements IAuthService {
     /**
@@ -62,9 +64,16 @@ class AuthService implements IAuthService {
             'exp' =>  time() + GlobalConstant::$REFRESH_TOKEN_LIFE_TIME,
         ];
         $key = new Key($privateKey, GlobalConstant::$ALGORITHM);
-        $refreshToken = JWT::encode($payload, $key->getKeyMaterial(), GlobalConstant::$ALGORITHM);
+        $refreshToken = JWT::encode(
+            $payload,
+            $key->getKeyMaterial(),
+            GlobalConstant::$ALGORITHM
+        );
         $refreshTokenExpiresAt =
-            now()->addDays(30)->timezone(GlobalConstant::$FORMAT_TIMEZONE)->format(GlobalConstant::$FORMAT_DATETIME);
+            now()
+            ->addDays(30)
+            ->timezone(GlobalConstant::$FORMAT_TIMEZONE)
+            ->format(GlobalConstant::$FORMAT_DATETIME);
 
         // lưu refresh token mới vào CSDL
         self::$userRepo->update(['refresh_token' => $refreshToken], $authUser->id);
@@ -98,48 +107,110 @@ class AuthService implements IAuthService {
             "id" => $newUser["id"]
         ];
 
+        // thiết lập vai trò và quyền cho thành viên mới
+        $roleMember = Role::where(['name' => RoleConstant::$MEMBER])->first();
+        $newUser->assignRole($roleMember);
+
         // gửi mail xác thực khi đăng ký thành công 
         $id = $newUser['id'];
-        $token = $newUser->createToken(GlobalConstant::$AUTH_TOKEN)->accessToken;
         $email = $registerDTO['email'];
-        $registerDTO['id'] = $id;
-        $registerDTO['token'] = $token;
-        dispatch(new VerifyEmailQueueJob($email, $registerDTO));
+        $sendOtpEmailData = [
+            'id' => $id,
+            'full_name' => $registerDTO['full_name'],
+            'email' => $email
+        ];
+        self::sendOtpEmail($sendOtpEmailData);
 
         return $result;
+    }
+    /**
+     * Dịch vụ gửi mã otp thông qua email của thành viên hiện tại
+     */
+    public static function sendOtpEmail(mixed $sendOtpEmailData) {
+        $email = $sendOtpEmailData['email'];
+        $user = self::$userRepo->findOne([
+            'email' => $email,
+        ]);
+
+        // kiểm tra thành viên có tồn tại
+        if (empty($user)) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_EXIST,
+                BaseHTTPResponse::$NOT_FOUND
+            );
+        }
+
+        // kiểm tra thành viên đã xác thực email chưa
+        if ($user['email_verified_at'] !== null) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_VERIFIED_EMAIL,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
+        // kiểm tra thành viên đã gửi mã otp trước đó và mã còn hạn sử dụng
+        if ($user['otp_email_expired_at'] !== null && $user['otp_email_expired_at'] > now()) {
+            throw new \Exception(
+                MessageConstant::$OTP_IS_STILL_USABLE,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
+        // tạo và lưu mã otp vào CSDL
+        $otpEmailCode = substr(time(), -3) . Str::random(3);
+        $otpEmailExpiresAt = now()->addMinutes(1);
+        self::$userRepo->update([
+            'otp_email_code' => $otpEmailCode,
+            'otp_email_expired_at' => $otpEmailExpiresAt,
+        ], $user['id']);
+        $sendOtpEmailData['id'] = $user['id'];
+        $sendOtpEmailData['full_name'] = $user['full_name'];
+        $sendOtpEmailData['otp_email_code'] = $otpEmailCode;
+        $sendOtpEmailData['otp_email_expired_at'] = $otpEmailExpiresAt->toString();
+
+        // gửi mail xác thực
+        dispatch(new VerifyEmailQueueJob(
+            $sendOtpEmailData['email'],
+            $sendOtpEmailData
+        ));
     }
     /**
      * Dịch vụ xác thực mail thành viên hiện tại
      */
     public static function verifyEmail(mixed $verifyEmailData) {
-        $id = $verifyEmailData['id'];
-        $token = $verifyEmailData['token'];
-        $user = self::$userRepo->findById($id);
+        $email = $verifyEmailData['email'];
+        $user = self::$userRepo->findOne([
+            'email' => $email,
+        ]);
 
         // kiểm tra thành viên có tồn tại
         if (empty($user)) {
-            throw new \Exception("Thành viên không tồn tại", BaseHTTPResponse::$NOT_FOUND);
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_EXIST,
+                BaseHTTPResponse::$NOT_FOUND
+            );
         }
+        $id = $user['id'];
 
         // kiểm tra thành viên đã xác thực email trước đó chưa
         if (!empty($user->email_verified_at)) {
-            throw new \Exception("Thành viên đã xác thực email trước đó", BaseHTTPResponse::$BAD_REQUEST);
+            throw new \Exception(
+                MessageConstant::$MEMBER_VERIFIED_EMAIL,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
         }
 
-        // Lấy khóa công khai
-        $publicKey = file_get_contents(storage_path(GlobalConstant::$OAUTH_PUBLIC_KEY));
-        $decode = JWT::decode($token, new Key($publicKey, GlobalConstant::$ALGORITHM));
-
-        $decodeID = $decode->jti;
-        $dataDecode = Token::where('id', $decodeID)->first()->attributesToArray();
-
-        // kiểm tra token có hợp lệ
+        // kiểm tra mã otp có hợp lệ
         if (
-            !is_array($dataDecode)
-            || (is_array($dataDecode) && count($dataDecode) === 0)
-            || $dataDecode['user_id'] != $id
+            empty($user->otp_email_code)
+            || $user->otp_email_code != $verifyEmailData['otp_email_code']
+            || empty($user->otp_email_expired_at)
+            || $user->otp_email_expired_at < now()
         ) {
-            throw new \Exception("Token không chính xác", BaseHTTPResponse::$UNAUTHORIZED);
+            throw new \Exception(
+                MessageConstant::$INVALID_OTP_CODE,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
         }
 
         $dataUpdate = [
@@ -149,11 +220,11 @@ class AuthService implements IAuthService {
         // cập nhật lại thông tin thành viên
         self::$userRepo->update($dataUpdate, $id);
 
+        $meta = self::generateToken($user);
+        $user = self::$userRepo->findById($id);
         $result = [
-            'id' => $user->id,
-            'tokenType' => GlobalConstant::$TYPE_TOKEN,
-            'token' => $token,
-            'emailVerifiedAt' => date(GlobalConstant::$FORMAT_DATETIME_DB, time()),
+            'data' => $user,
+            'meta' => $meta
         ];
         return $result;
     }
@@ -165,32 +236,44 @@ class AuthService implements IAuthService {
     public static function login(mixed $loginData) {
         // kiểm tra đăng nhập
         if (!Auth::attempt($loginData)) {
-            throw new \Exception("Tên đăng nhập hoặc mật khẩu không chính xác", BaseHTTPResponse::$BAD_REQUEST);
+            throw new \Exception(
+                MessageConstant::$WRONG_LOGIN,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
         }
         $authUser = Auth::user();
-        $currentUser = $authUser->attributesToArray();
 
         // kiểm tra thành viên đã xác thực email hay chưa
-        $emailVerifiedAt = $currentUser['email_verified_at'];
+        $emailVerifiedAt = $authUser['email_verified_at'];
         if (empty($emailVerifiedAt)) {
             // gửi email khi người dùng đăng nhập vào mà chưa xác thực email
-            $id = $currentUser['id'];
-            $token = $authUser->createToken(GlobalConstant::$AUTH_TOKEN)->accessToken;
-            $email = $currentUser['email'];
-            $currentUser['id'] = $id;
-            $currentUser['token'] = $token;
-            dispatch(new VerifyEmailQueueJob($email, $currentUser));
-            throw new \Exception("Chưa xác nhận email. Hệ thống đã gửi mail cho bạn. Vui lòng vào email để xác thực!", BaseHTTPResponse::$UNAUTHORIZED);
+            $sendOtpEmailData = [
+                'id' => $authUser['id'],
+                'full_name' => $authUser['full_name'],
+                'email' => $authUser['email']
+            ];
+            self::sendOtpEmail($sendOtpEmailData);
+            throw new \Exception(
+                MessageConstant::$EMAIL_NOT_VERIFIED,
+                BaseHTTPResponse::$UNAUTHORIZED
+            );
         }
 
         // kiểm tra tài khoản có bị khoá hay không
-        $accountStatus = $authUser->attributesToArray()['status'];
+        $accountStatus = $authUser['status'];
         if ($accountStatus == 0) {
-            throw new \Exception("Tài khoản này đã bị khoá", BaseHTTPResponse::$UNAUTHORIZED);
+            throw new \Exception(
+                MessageConstant::$ACCOUNT_LOCKED,
+                BaseHTTPResponse::$UNAUTHORIZED
+            );
         }
 
         // tạo token cho thành viên
-        $result = self::generateToken($authUser);
+        $meta = self::generateToken($authUser);
+        $result = [
+            'data' => $authUser,
+            'meta' => $meta
+        ];
         return $result;
     }
     /**
@@ -208,28 +291,42 @@ class AuthService implements IAuthService {
     public static function forgotPassword(string $email) {
         // trường hợp người dùng đã đăng nhập
         if (Auth::check()) {
-            throw new \Exception("Bạn đã đăng nhập", BaseHTTPResponse::$BAD_REQUEST);
+            throw new \Exception(
+                MessageConstant::$YOU_LOGGED,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
         }
 
         // kiểm tra email có tồn tại trong CSDL
         $user = self::$userRepo->findOne(['email' => $email]);
         if (empty($user->email)) {
-            throw new \Exception("Email không tồn tại", BaseHTTPResponse::$NOT_FOUND);
+            throw new \Exception(
+                MessageConstant::$EMAIL_NOT_EXIST,
+                BaseHTTPResponse::$NOT_FOUND
+            );
         }
 
         // Tạo ngẫu nhiên mật khẩu và mã hoá nó
-        $password = Str::random(8);
-        $hashPassword = Hash::make($password);
+        $newPassword = Str::random(8);
+        $hashNewPassword = Hash::make($newPassword);
 
         // Lưu mật khẩu mới vào CSDL
-        self::$userRepo->update(['password' => $hashPassword], $user->id);
-        $user['password'] = $password;
+        self::$userRepo->update(
+            ['password' => $hashNewPassword],
+            $user->id
+        );
+        $forgotPasswordData = [
+            'id' => $user->id,
+            'full_name' => $user->full_name,
+            'email' => $user->email,
+            'new_password' => $newPassword
+        ];
 
         // Gửi email cho người dùng
-        dispatch(new ForgotPasswordQueueJob($email, $user));
+        dispatch(new ForgotPasswordQueueJob($email, $forgotPasswordData));
         $result = [
             'id' => $user->id,
-            'newPassword' => $password
+            'newPassword' => $newPassword
         ];
         return $result;
     }
@@ -246,7 +343,10 @@ class AuthService implements IAuthService {
 
         // kiểm tra mật khẩu cũ có khớp với mật khẩu trong CSDL
         if (!Hash::check($oldPassword, $hashOldPassword)) {
-            throw new \Exception("Mật khẩu cũ không chính xác", BaseHTTPResponse::$BAD_REQUEST);
+            throw new \Exception(
+                MessageConstant::$WRONG_OLD_PASSWORD,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
         }
 
         // Mã hoá mật khẩu mới
@@ -275,21 +375,33 @@ class AuthService implements IAuthService {
         if (!empty($updateMeData['email']) && isset($updateMeData['email'])) {
             $user = self::$userRepo->findOne(['email' => $updateMeData['email']]);
             if (!empty($user->email) && $user->id != $id) {
-                throw new \Exception("Email đã tồn tại", BaseHTTPResponse::$BAD_REQUEST);
+                throw new \Exception(
+                    MessageConstant::$EMAIL_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
             }
         }
 
         // cập nhật lại thông tin thành viên
         $updateMeRequest = [
-            'full_name' => empty($updateMeData['fullName']) || !isset($updateMeData['fullName']) ? $user['full_name'] : $updateMeData['fullName'],
-            'email' => empty($updateMeData['email']) || !isset($updateMeData['email']) ? $user['email'] : $updateMeData['email'],
-            'phone' => empty($updateMeData['phone']) || !isset($updateMeData['phone']) ? $user['phone'] : $updateMeData['phone'],
-            'address' => empty($updateMeData['address']) || !isset($updateMeData['address']) ? $user['address'] : $updateMeData['address'],
+            'full_name' => empty($updateMeData['fullName']) || !isset($updateMeData['fullName'])
+                ? $user['full_name']
+                : $updateMeData['fullName'],
+            'email' => empty($updateMeData['email']) || !isset($updateMeData['email'])
+                ? $user['email']
+                : $updateMeData['email'],
+            'phone' => empty($updateMeData['phone']) || !isset($updateMeData['phone'])
+                ? $user['phone']
+                : $updateMeData['phone'],
+            'address' => empty($updateMeData['address']) || !isset($updateMeData['address'])
+                ? $user['address']
+                : $updateMeData['address'],
         ];
 
         self::$userRepo->update($updateMeRequest, $id);
+        $user = self::$userRepo->findOne(['id' => $id]);
 
-        return null;
+        return $user;
     }
     /**
      * Dịch vụ tải ảnh đại diện của thành viên hiện tại
@@ -337,16 +449,26 @@ class AuthService implements IAuthService {
 
         // kiểm tra người dùng có tồn tại trong CSDL
         if (empty($user->id)) {
-            throw new \Exception("Người dùng không tồn tại", BaseHTTPResponse::$NOT_FOUND);
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_EXIST,
+                BaseHTTPResponse::$NOT_FOUND
+            );
         }
 
         // kiểm tra refresh token có khớp với refresh token trong CSDL
         if ($refreshToken != $user->refresh_token) {
-            throw new \Exception("Token không hợp lệ", BaseHTTPResponse::$UNAUTHORIZED);
+            throw new \Exception(
+                MessageConstant::$INVALID_TOKEN,
+                BaseHTTPResponse::$UNAUTHORIZED
+            );
         }
 
         // tạo token cho thành viên
-        $result = self::generateToken($user);
+        $meta = self::generateToken($user);
+        $result = [
+            'data' => $user,
+            'meta' => $meta,
+        ];
         return $result;
     }
 }

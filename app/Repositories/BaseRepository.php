@@ -87,6 +87,6 @@ abstract class BaseRepository implements IBaseRepository {
         }
 
         $item->delete();
-        return $item;
+        return true;
     }
 }

@@ -19,11 +19,11 @@ class ForgotPassword extends Mailable {
      */
     private string $FULL_NAME = "full_name";
     private string $EMAIL = "email";
-    private string $NEW_PASSWORD = "password";
+    private string $NEW_PASSWORD = "new_password";
     public $data = [
         "name" => "",
         "email" => "",
-        "password" => ""
+        "new_password" => ""
     ];
     /**
      * Create a new message instance.

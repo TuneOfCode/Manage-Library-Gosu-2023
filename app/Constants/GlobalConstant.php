@@ -32,6 +32,10 @@ class GlobalConstant {
      */
     static string $FORMAT_TIMEZONE = "Asia/Ho_Chi_Minh";
     /**
+     * Liên kết cơ sở gửi lại xác thực email
+     */
+    static string $BASE_RESEND_OTP_EMAIL = '/api/v1/auth/resend-otp-email'; // {DOMAIN}/api/v1/auth/resend-otp-email
+    /**
      * Liên kết cơ sở xác thực email
      */
     static string $BASE_VERIFY_EMAIL = '/api/v1/auth/verify-email'; // {DOMAIN}/api/v1/auth/verify-email
@@ -55,4 +59,16 @@ class GlobalConstant {
      * Loại token
      */
     static string $TYPE_TOKEN = "Bearer";
+    /**
+     * Đặt giá trị mặc định cho guard trong phân quyền
+     */
+    static string $GUARD_API = "api";
+    /**
+     * Vai trò quản trị viên
+     */
+    static string $ROLE_ADMIN = "role:admin";
+    /**
+     * Vai trò thành viên
+     */
+    static string $ROLE_MEMBER = "role:member";
 }

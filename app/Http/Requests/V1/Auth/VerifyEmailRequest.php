@@ -4,7 +4,7 @@ namespace App\Http\Requests\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest {
+class VerifyEmailRequest extends FormRequest {
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -19,11 +19,8 @@ class RegisterRequest extends FormRequest {
      */
     public function rules(): array {
         return [
-            'fullName' => ['required', 'string'],
-            'email' => ['required', 'email', 'unique:users', 'email'],
-            'username' => ['required', 'string', 'unique:users'],
-            'password' => ['required', 'string', 'min:8'],
-            'confirmPassword' => ['required', 'string', 'min:8', 'same:password']
+            'email' => 'required|email|exists:users,email',
+            'otpEmailCode' => 'required|string|max:6'
         ];
     }
     /**
@@ -31,7 +28,7 @@ class RegisterRequest extends FormRequest {
      */
     public function prepareForValidation(): void {
         $this->merge([
-            'full_name' => $this->input('fullName')
+            'otp_email_code' => $this->input('otpEmailCode')
         ]);
     }
 }

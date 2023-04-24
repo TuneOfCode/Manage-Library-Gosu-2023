@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\APIs\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\User\UserResource;
+use App\Http\Resources\V1\User\UserResourceCollection;
 use App\Http\Responses\BaseResponse;
 use App\Repositories\User\UserRepository;
 use Illuminate\Http\Request;
@@ -26,7 +28,7 @@ class UserController extends Controller {
      * Display a listing of the resource.
      */
     public function index(Request $request) {
-        $listOfUsers = $this->userRepo->findAll(10);
+        $listOfUsers = new UserResourceCollection($this->userRepo->findAll(10));
         return $this->success($request, $listOfUsers, "Lấy ra tất cả người dùng thành công!");
     }
 
@@ -41,7 +43,7 @@ class UserController extends Controller {
      * Display the specified resource.
      */
     public function show(Request $request, string $id) {
-        $user = $this->userRepo->findById($id);
+        $user = new UserResource($this->userRepo->findById($id));
         if (empty($user)) {
             return $this->error($request, null, "Lỗi không tìm thấy người dùng");
         }
@@ -60,5 +62,15 @@ class UserController extends Controller {
      */
     public function destroy(string $id) {
         //
+    }
+    /**
+     * Khoá một người dùng
+     */
+    public function lock(string $id) {
+    }
+    /**
+     * Mở khoá một người dùng
+     */
+    public function unlock(string $id) {
     }
 }

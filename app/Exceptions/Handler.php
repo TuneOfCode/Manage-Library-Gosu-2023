@@ -6,7 +6,9 @@ use App\Http\Responses\BaseHTTPResponse;
 use App\Http\Responses\BaseResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Throwable;
 
 class Handler extends ExceptionHandler {
@@ -62,5 +64,15 @@ class Handler extends ExceptionHandler {
      */
     public function convertValidationExceptionToResponse(ValidationException $error, $request) {
         return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNPROCESSABLE_ENTITY);
+    }
+    /**
+     * Xử lý ngoại lệ không được phép
+     */
+    public function render($request, Throwable $error) {
+        if ($error instanceof UnauthorizedException) {
+            return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$FORBIDDEN);
+        }
+
+        return parent::render($request, $error);
     }
 }

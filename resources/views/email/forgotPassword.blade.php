@@ -68,7 +68,7 @@
             <h1>Xin chào, <span class="memberName">{{ $full_name }}</span>!</h1>
             <p class="email">Email: {{ $email }}</p>
             <p>
-                Đây là mật khẩu mới của bạn: <span class="password">{{ $password }}</span>
+                Đây là mật khẩu mới của bạn: <span class="password">{{ $new_password }}</span>
             </p>
             <p>
                 Hãy đăng nhập và đổi mật khẩu ngay để bảo mật tài khoản của bạn.

@@ -1,6 +1,7 @@
 <?php
 
 use App\Constants\GlobalConstant;
+use App\Constants\PermissionConstant;
 use App\Http\Controllers\APIs\V1\AuthController;
 use App\Http\Controllers\APIs\V1\PackageController;
 use App\Http\Controllers\APIs\V1\UserController;
@@ -22,35 +23,86 @@ use Illuminate\Support\Facades\Route;
  * API version 1
  */
 Route::group([
-    'prefix' => 'v1',
-    // 'namespace' => ' App\Http\Controllers\APIs\V1'
+    'prefix' => 'v1'
 ], function () {
     #region Auth
-    Route::post('auth/register', [AuthController::class, 'register']);
-    Route::post('auth/login', [AuthController::class, 'login']);
-    Route::post('auth/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::get('auth/me', [AuthController::class, 'me']);
-    Route::post(
-        'auth/forgot-password',
-        [AuthController::class, 'forgotPassword']
-    );
-    Route::patch(
-        'auth/change-password',
-        [AuthController::class, 'changePassword']
-    );
-    Route::patch(
-        'auth/update-me',
-        [AuthController::class, 'updateMe']
-    );
-    Route::post(
-        'auth/upload-avatar',
-        [AuthController::class, 'uploadAvatar']
-    );
-    Route::post('auth/refresh-token', [AuthController::class, 'refreshToken']);
+    Route::group([
+        'prefix' => 'auth',
+    ], function () {
+        Route::post('register', [
+            AuthController::class,
+            'register'
+        ]);
+        Route::post('login', [
+            AuthController::class,
+            'login'
+        ]);
+        Route::post('resend-otp-email', [
+            AuthController::class,
+            'resendOtpEmail'
+        ]);
+        Route::post('verify-email', [
+            AuthController::class,
+            'verifyEmail'
+        ]);
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post(
+            'forgot-password',
+            [AuthController::class, 'forgotPassword']
+        );
+        Route::patch(
+            'change-password',
+            [AuthController::class, 'changePassword']
+        );
+        Route::patch(
+            'update-me',
+            [AuthController::class, 'updateMe']
+        );
+        Route::post(
+            'upload-avatar',
+            [AuthController::class, 'uploadAvatar']
+        );
+        Route::post('refresh-token', [AuthController::class, 'refreshToken']);
+    });
     #endregion
 
     #region Users
-    Route::middleware(GlobalConstant::$AUTH_MIDDLEWARE)->apiResource('users', UserController::class);
+    Route::group([
+        'prefix' => 'users',
+        'middleware' => [
+            GlobalConstant::$AUTH_MIDDLEWARE,
+            GlobalConstant::$ROLE_ADMIN
+        ]
+    ], function () {
+        Route::get('/', [
+            UserController::class,
+            'index'
+        ])->middleware('permission:' . PermissionConstant::$READ_ALL_USER);
+        Route::post('/', [
+            UserController::class,
+            'store'
+        ])->middleware('permission:' . PermissionConstant::$CREATE_USER);;
+        Route::get('/{id}', [
+            UserController::class,
+            'show'
+        ])->middleware('permission:' . PermissionConstant::$READ_A_USER);;
+        Route::post('/{id}', [
+            UserController::class,
+            'update'
+        ])->middleware('permission:' . PermissionConstant::$UPDATE_USER);;
+        Route::delete('/{id}', [
+            UserController::class,
+            'destroy'
+        ])->middleware('permission:' . PermissionConstant::$DELETE_USER);;
+        Route::patch('/lock/{id}', [
+            UserController::class,
+            'lock'
+        ])->middleware('permission:' . PermissionConstant::$LOCK_USER);;
+        Route::patch('/unlock/{id}', [
+            UserController::class,
+            'unlock'
+        ])->middleware('permission:' . PermissionConstant::$UNLOCK_USER);;
+    });
     #endregion
 
     #region Packages

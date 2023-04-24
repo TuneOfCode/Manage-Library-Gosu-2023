@@ -19,14 +19,18 @@ class VerifyEmail extends Mailable {
     private string $FULL_NAME = "full_name";
     private string $EMAIL = "email";
     private string $ID = "id";
-    private string $TOKEN = "token";
+    // private string $TOKEN = "token";
     private string $LINK = "link";
+    private string $OTP_EMAIL_CODE = "otp_email_code";
+    private string $OTP_EMAIL_EXPIRED_AT = "otp_email_expired_at";
     public $data = [
         'full_name' => '',
         'email' => '',
         'id' => '',
-        'token' => '',
         'link' => '',
+        'otp_email_code' => '',
+        'otp_email_expired_at' => '',
+        // 'token' => '',
     ];
     /**
      * Create a new message instance.
@@ -35,8 +39,10 @@ class VerifyEmail extends Mailable {
         $this->data[$this->FULL_NAME] = $user[$this->FULL_NAME];
         $this->data[$this->EMAIL] = $user[$this->EMAIL];
         $this->data[$this->ID] = $user[$this->ID];
-        $this->data[$this->TOKEN] = $user[$this->TOKEN];
-        $this->data[$this->LINK] = config('app.url') . ':' . config('app.port') . GlobalConstant::$BASE_VERIFY_EMAIL;
+        $this->data[$this->LINK] = config('app.url') . ':' . config('app.port') . GlobalConstant::$BASE_RESEND_OTP_EMAIL;
+        $this->data[$this->OTP_EMAIL_CODE] = $user[$this->OTP_EMAIL_CODE];
+        $this->data[$this->OTP_EMAIL_EXPIRED_AT] = $user[$this->OTP_EMAIL_EXPIRED_AT];
+        // $this->data[$this->TOKEN] = $user[$this->TOKEN];
     }
 
     /**
@@ -49,7 +55,7 @@ class VerifyEmail extends Mailable {
         );
     }
     /**
-     * Hiển thị ra view
+     * Hiển thị ra view markdown
      */
     public function build() {
         return $this->markdown('email.verify', $this->data);

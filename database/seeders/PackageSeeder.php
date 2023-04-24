@@ -13,7 +13,7 @@ class PackageSeeder extends Seeder {
     public function run(): void {
         Package::factory()
             ->count(1)
-            ->hasUsers(20)
+            // ->hasUsers(20)
             ->create();
     }
 }
