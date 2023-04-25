@@ -37,4 +37,23 @@ class MessageConstant {
     public static string $WRONG_OLD_PASSWORD = "Wrong old password";
     public static string $INVALID_TOKEN = "Invalid token";
     #endregion
+
+    #region User
+    public static string $CREATE_USER_SUCCESS = "Create user success!";
+    public static string $CREATE_USER_FAILED = "Create user failed!";
+    public static string $UPDATE_USER_SUCCESS = "Update user success!";
+    public static string $UPDATE_USER_FAILED = "Update user failed!";
+    public static string $DELETE_USER_SUCCESS = "Delete user success!";
+    public static string $DELETE_USER_FAILED = "Delete user failed!";
+    public static string $GET_USER_SUCCESS = "Get user success!";
+    public static string $GET_USER_FAILED = "Get user failed!";
+    public static string $GET_LIST_USER_SUCCESS = "Get list user success!";
+    public static string $GET_LIST_USER_FAILED = "Get list user failed!";
+    public static string $USER_NOT_EXIST = "User does not exist";
+    public static string $USER_EXIST = "User does exist";
+    public static string $LOCK_USER_SUCCESS = "Lock user success!";
+    public static string $LOCK_USER_FAILED = "Lock user failed!";
+    public static string $UNLOCK_USER_SUCCESS = "Unlock user success!";
+    public static string $UNLOCK_USER_FAILED = "Unlock user failed!";
+    #endregion
 }

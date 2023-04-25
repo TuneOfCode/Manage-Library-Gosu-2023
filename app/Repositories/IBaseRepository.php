@@ -6,15 +6,15 @@ interface IBaseRepository {
     /**
      * Hiển thị tất cả bản ghi
      */
-    public function findAll(int $pageSize);
+    public function findAll(array $attributes, array $relations = [], int $pageSize = 10);
     /**
      * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện
      */
-    public function findOne(mixed $attributes);
+    public function findOne(mixed $attributes, array $relations = []);
     /**
      * Lấy ra chi tiết một bản ghi thông qua ID
      */
-    public function findById(mixed $id);
+    public function findById(mixed $id, array $relations = []);
     /**
      * Tạo mới một bản ghi
      */

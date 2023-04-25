@@ -23,7 +23,7 @@ class UserResource extends JsonResource {
             'score' => $this->score,
             'status' => $this->status,
             'balance' => $this->balance,
-            'package' => $this->package,
+            'package' => $this->whenLoaded('package'),
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
         ];

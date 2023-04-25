@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\APIs\V1;
 
+use App\Constants\GlobalConstant;
 use App\Constants\MessageConstant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Auth\ChangePasswordRequest;
@@ -30,7 +31,7 @@ class AuthController extends Controller {
      */
     public function __construct() {
         $this->middleware(
-            'auth:api',
+            GlobalConstant::$AUTH_MIDDLEWARE,
             ['except' => [
                 'login',
                 'register',

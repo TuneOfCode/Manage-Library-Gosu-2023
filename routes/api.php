@@ -78,18 +78,10 @@ Route::group([
             UserController::class,
             'index'
         ])->middleware('permission:' . PermissionConstant::$READ_ALL_USER);
-        Route::post('/', [
-            UserController::class,
-            'store'
-        ])->middleware('permission:' . PermissionConstant::$CREATE_USER);;
         Route::get('/{id}', [
             UserController::class,
             'show'
         ])->middleware('permission:' . PermissionConstant::$READ_A_USER);;
-        Route::post('/{id}', [
-            UserController::class,
-            'update'
-        ])->middleware('permission:' . PermissionConstant::$UPDATE_USER);;
         Route::delete('/{id}', [
             UserController::class,
             'destroy'

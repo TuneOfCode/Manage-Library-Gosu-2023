@@ -26,27 +26,33 @@ abstract class BaseRepository implements IBaseRepository {
         return $this->_model = app()->make($this->getModel());
     }
     /**
+     * Hiển thị tất cả bản ghi
+     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     */
+    public function findAll(array $attributes, array $relations = [], int $pageSize = 10) {
+        return $this->_model::where($attributes)->with($relations)->paginate($pageSize);
+    }
+    /**
      * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện
      * @param mixed $attributes
      * @return mixed
      */
-    public function findOne(mixed $attributes) {
-        return $this->_model->where($attributes)->first();
-    }
-    /**
-     * Hiển thị tất cả bản ghi
-     * @return \Illuminate\Database\Eloquent\Collection|static[]
-     */
-    public function findAll(int $pageSize = 10) {
-        return $this->_model->paginate($pageSize);
+    public function findOne(mixed $attributes, array $relations = []) {
+        if (count($relations) == 0) {
+            return $this->_model::where($attributes);
+        }
+        return $this->_model::where($attributes)->loadMissing($relations);
     }
     /**
      * Lấy ra chi tiết một bản ghi
      * @param mixed $id 
      * @return mixed
      */
-    public function findById(mixed $id) {
-        return $this->_model->find($id);
+    public function findById(mixed $id, array $relations = []) {
+        if (count($relations) == 0) {
+            return $this->_model->find($id);
+        }
+        return $this->_model->find($id)->loadMissing($relations);
     }
     /**
      * Tạo môt bản ghi
