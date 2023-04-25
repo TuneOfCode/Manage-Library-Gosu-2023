@@ -36,6 +36,7 @@ class MessageConstant {
     public static string $EMAIL_EXIST = "Email does exist";
     public static string $WRONG_OLD_PASSWORD = "Wrong old password";
     public static string $INVALID_TOKEN = "Invalid token";
+    public static string $ALREADY_LOGIN = "You have already logged in";
     #endregion
 
     #region User
@@ -55,5 +56,24 @@ class MessageConstant {
     public static string $LOCK_USER_FAILED = "Lock user failed!";
     public static string $UNLOCK_USER_SUCCESS = "Unlock user success!";
     public static string $UNLOCK_USER_FAILED = "Unlock user failed!";
+    #endregion
+
+    #region Package
+    public static string $CREATE_PACKAGE_SUCCESS = "Create package success!";
+    public static string $CREATE_PACKAGE_FAILED = "Create package failed!";
+    public static string $UPDATE_PACKAGE_SUCCESS = "Update package success!";
+    public static string $UPDATE_PACKAGE_FAILED = "Update package failed!";
+    public static string $DELETE_PACKAGE_SUCCESS = "Delete package success!";
+    public static string $DELETE_PACKAGE_FAILED = "Delete package failed!";
+    public static string $GET_PACKAGE_SUCCESS = "Get package success!";
+    public static string $GET_PACKAGE_FAILED = "Get package failed!";
+    public static string $GET_LIST_PACKAGE_SUCCESS = "Get list package success!";
+    public static string $GET_LIST_PACKAGE_FAILED = "Get list package failed!";
+    public static string $PACKAGE_NOT_EXIST = "Package does not exist";
+    public static string $REGISTER_PACKAGE_SUCCESS = "Register package success!";
+    public static string $REGISTER_PACKAGE_FAILED = "Register package failed!";
+    public static string $PACKAGE_ALREADY_REGISTERED = "Package already registered";
+    public static string $NOT_ENOUGH_BALANCE = "Your balance is not enough to register this package";
+    public static string $PACKAGE_IS_USING = "Package is using";
     #endregion
 }

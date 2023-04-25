@@ -7,18 +7,16 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Package>
  */
-class PackageFactory extends Factory
-{
+class PackageFactory extends Factory {
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    public function definition(): array
-    {
+    public function definition(): array {
         return [
-            'name' => 'Gói miễn phí',
-            'price' => 0 
+            'name' => 'Free Package',
+            'price' => 0
         ];
     }
 }

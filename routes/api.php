@@ -98,6 +98,40 @@ Route::group([
     #endregion
 
     #region Packages
-    Route::apiResource('packages', PackageController::class);
+    Route::group([
+        'prefix' => 'packages',
+        'middleware' => [
+            GlobalConstant::$AUTH_MIDDLEWARE
+        ]
+    ], function () {
+        Route::get('/', [
+            PackageController::class,
+            'index'
+        ])->middleware('permission:' . PermissionConstant::$READ_ALL_PACKAGE);
+        Route::get('/{id}', [
+            PackageController::class,
+            'show'
+        ])->middleware('permission:' . PermissionConstant::$READ_A_PACKAGE);
+        Route::post('/', [
+            PackageController::class,
+            'store'
+        ])->middleware('permission:' . PermissionConstant::$CREATE_PACKAGE);
+        Route::patch('/{id}', [
+            PackageController::class,
+            'update'
+        ])->middleware('permission:' . PermissionConstant::$UPDATE_PACKAGE);
+        Route::put('/{id}', [
+            PackageController::class,
+            'update'
+        ])->middleware('permission:' . PermissionConstant::$UPDATE_PACKAGE);
+        Route::delete('/{id}', [
+            PackageController::class,
+            'destroy'
+        ])->middleware('permission:' . PermissionConstant::$DELETE_PACKAGE);
+        Route::patch('/{id}/register', [
+            PackageController::class,
+            'register'
+        ])->middleware('permission:' . PermissionConstant::$REGISTER_PACKAGE);
+    });
     #endregion
 });

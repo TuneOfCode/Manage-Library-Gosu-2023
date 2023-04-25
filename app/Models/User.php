@@ -68,6 +68,9 @@ class User extends Authenticatable {
      *  Định nghĩa trường dữ liệu đầu vào cho xác thực
      */
     public function findForPassport($username) {
-        return self::where('username', $username)->first(); // change column name whatever you use in credentials
+        return $this->orWhere(
+            ['username', $username],
+            ['email', $username],
+        )->get(); // change column name whatever you use in credentials
     }
 }

@@ -234,8 +234,22 @@ class AuthService implements IAuthService {
      * @return 
      */
     public static function login(mixed $loginData) {
+        // kiểm tra người dùng trước đó đã đăng nhập hay chưa
+        if (Auth::check()) {
+            throw new \Exception(
+                MessageConstant::$ALREADY_LOGIN,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+        $loginData['email'] = $loginData['username'];
         // kiểm tra đăng nhập
-        if (!Auth::attempt($loginData)) {
+        if (!Auth::attempt([
+            'email' => $loginData['email'],
+            'password' => $loginData['password']
+        ]) && !Auth::attempt([
+            'username' => $loginData['username'],
+            'password' => $loginData['password']
+        ])) {
             throw new \Exception(
                 MessageConstant::$WRONG_LOGIN,
                 BaseHTTPResponse::$BAD_REQUEST
@@ -299,7 +313,7 @@ class AuthService implements IAuthService {
 
         // kiểm tra email có tồn tại trong CSDL
         $user = self::$userRepo->findOne(['email' => $email]);
-        if (empty($user->email)) {
+        if (empty($user)) {
             throw new \Exception(
                 MessageConstant::$EMAIL_NOT_EXIST,
                 BaseHTTPResponse::$NOT_FOUND

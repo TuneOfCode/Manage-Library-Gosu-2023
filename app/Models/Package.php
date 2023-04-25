@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Package extends Model
-{
+class Package extends Model {
     use HasFactory;
     /**
      * Những thuộc tính cho phép có
@@ -14,6 +13,7 @@ class Package extends Model
     protected $fillable = [
         'name',
         'price',
+        'description',
         'isActive'
     ];
     /**

@@ -39,7 +39,7 @@ abstract class BaseRepository implements IBaseRepository {
      */
     public function findOne(mixed $attributes, array $relations = []) {
         if (count($relations) == 0) {
-            return $this->_model::where($attributes);
+            return $this->_model::where($attributes)->first();
         }
         return $this->_model::where($attributes)->loadMissing($relations);
     }
@@ -69,7 +69,7 @@ abstract class BaseRepository implements IBaseRepository {
      * @return boolean|mixed
      */
     public function update(mixed $attributes, mixed $id) {
-        $item = $this->_model::find($id);
+        $item = $this->_model->find($id);
         if (empty($item) || !isset($item)) {
             return false;
         }

@@ -18,14 +18,9 @@ class UserController extends Controller {
      */
     use BaseResponse;
     /**
-     * [Test] Thuộc tính repo
-     */
-    private UserRepository $userRepo;
-    /**
      * Hàm khởi tạo 
      */
     public function __construct() {
-        $this->userRepo = new UserRepository();
         new UserService(new UserRepository());
     }
     /**
