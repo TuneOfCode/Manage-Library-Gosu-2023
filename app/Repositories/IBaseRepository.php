@@ -8,9 +8,13 @@ interface IBaseRepository {
      */
     public function findAll(array $attribute,int $pageSize);
     /**
+     * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện
+     */
+    public function findOne(mixed $attributes);
+    /**
      * Lấy ra chi tiết một bản ghi thông qua ID
      */
-    public function findOne(mixed $id);
+    public function findById(mixed $id);
     /**
      * Tạo mới một bản ghi
      */
@@ -22,5 +26,5 @@ interface IBaseRepository {
     /**
      * Xóa một bản ghi
      */
-    public function destroy(mixed $id); 
+    public function destroy(mixed $id);
 }

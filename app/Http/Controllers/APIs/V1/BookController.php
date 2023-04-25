@@ -10,9 +10,9 @@ use App\Http\Resources\BookResource;
 use App\Http\Resources\BookResourceCollection;
 use App\Http\Responses\BaseResponse;
 use App\Models\Book;
+use App\Models\Category;
 use App\Repositories\Book\BookRepository;
 use App\Services\Book\BookService;
-use App\Services\V1\BookQuery;
 use Illuminate\Http\Request;
 
 
@@ -22,10 +22,6 @@ class BookController extends Controller
      * Sử dụng kiểu định dạng trả về API
      */
     use BaseResponse;
-    /**
-     * [Test] Thuộc tính repo
-     */
-    private BookRepository $bookRepo;
     /**
      * Hàm khởi tạo 
      */
@@ -39,34 +35,29 @@ class BookController extends Controller
     public function index(Request $request)
     {
         try {
-            // $listOfBooks = $this->bookRepo->findAll(10);
-            // return $this->success($request, $listOfBooks,"Lấy ra tất cả sách!");
+            // lọc 
             $filter = new BookFilter();
             $queryItems = $filter->transform($request);
-            // dd($queryItems);
-            // dd(Book::where('name', 'like', '%ce%')->paginate(10));
-
-            // if(count($queryItems)==0){
-            //     // return new BookResourceCollection(Book::paginate());
-            // }else{
-            //     return new BookResourceCollection(Book::where($queryItems)->paginate());
-            // }
+            
+            // gọi dịch vụ lấy ra tất cả các sách
             $data = BookService::getAllBook($queryItems);
-            dd($data)
-;            // return $data;
+
+            // xử lý nếu có request type
+            $typeRequest = $request->get('type');
+            if ($typeRequest === "new") {
+                $data = BookService::newBooks();
+            } else if ($typeRequest === "old") {
+                $data = BookService::oldBooks();
+            } else {
+                // chuyển về dạng
+                $data = new BookResourceCollection($data);
+            }
+            
             return $this->success($request, $data, "Lấy tất cả sách thành công");
         } catch (\Throwable $error) {
-            return $this->error($request, $error);
+            return $this->error($request, $error, $error->getMessage() || "Lấy tất cả sách thất bại");
         }
 
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -74,7 +65,14 @@ class BookController extends Controller
      */
     public function store(StoreBookRequest $request)
     {
-        return new BookResource(Book::create($request->all()));
+        // return new BookResource(Book::create($request->all()));
+        try {
+            // gọi dịch vụ tạo sách
+            $data = BookService::createBook($request->toArray());
+            return $this->success($request, $data, "Tạo mới sách thành công");
+        } catch (\Throwable $error) {
+            return $this->error($request, $error, $error->getMessage() || "Lấy tất cả sách thất bại");
+        }
     }
 
     /**
@@ -82,41 +80,41 @@ class BookController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $book = $this->bookRepo->findOne($id);
-        if(empty($book)){
-            return $this->error($request,"Không tìm thấy sách yêu cầu");
+        try {
+            // gọi dịch vụ lấy ra chi tiết một sách
+            $data = BookService::getByIdBook($id);
+            // chuyển về dạng
+            $data = new BookResource($data);
+            return $this->success($request, $data, "Lấy chi tiết sách thành công");
+        } catch (\Throwable $error) {
+            return $this->error($request, $error, $error->getMessage());
         }
-        return $this->success($request,$book,"Tồn tại sách bạn tìm kím");
     }
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Request $id)
-    {
-        //
-    }
-
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateBookRequest $request, Book $book )
+    public function update(UpdateBookRequest $request)
     {
-        $book->update($request->all());
-        if(empty($book)){
-            return $this->error($request,"Loại sách không tồn tại");
+        try {
+            // gọi dịch vụ cập nhật một sách
+            $data = BookService::updateBook($request);
+            // chuyển về dạng
+            $data = new BookResource($data);
+            return $this->success($request, $data, "Cập nhật sách thành công");
+        } catch (\Throwable $error) {
+            return $this->error($request, $error, $error->getMessage());
         }
-        return $this->success($request,$book,"Cập nhập thành công loại sách yêu cầu ");
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Book $book)
+    public function destroy(Category $category)
     {
-        if(!$book){
+        if(!$category){
             return response()->json(['message' => 'Sản phẩm không tồn tại'], 404);
             }
-            $book->delete();
+            $category->delete();
     
             return response()->json(['message' => 'Xóa sản phẩm thành công'],200);
     }
@@ -127,11 +125,21 @@ class BookController extends Controller
     public function search(Request $request) {
         $keyword = $request->input('keyword');
 
-        $products = Book::search($keyword)
+        $products = Category::search($keyword)
                            ->get();
     
         return response()->json([
             'data' => $products
         ]);
+    }
+    public function oldBooks()
+    {
+        $books = BookService::oldBooks();
+        return response()->json($books);
+    }
+    public function newBooks()
+    {
+        $books = BookService::newBooks();
+        return response()->json($books);
     }
 }

@@ -22,14 +22,15 @@ class StoreBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'name'=>['required'],
-        'quantity'=>['required'],
-        'price'=>['required'],
-        'loanPrice'=>['required'],
-        'status'=>['required'],
-        'author'=>['required'],
-        'publishedAt'=>['required'],
-        'categoryId' =>['required'],
+        'name'=>['required', 'string'],
+        'image' => 'required|mimes:jpeg,png,bmp',
+        'quantity'=>['required', 'integer'],
+        'price'=>['required', 'integer'],
+        'loanPrice'=>['required', 'integer'],
+        'status'=>['sometimes','boolean'],
+        'author'=>['required','string'],
+        'publishedAt'=>['required', 'string'],
+        'categoryId' =>['required', 'integer'],
         ];
     }
     protected function prepareForValidation(){

@@ -1,11 +1,14 @@
 <?php
 
 namespace App\Http\Responses;
+
 use App\Constants\GlobalConstant;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 
 trait BaseResponse {
     /**
@@ -18,7 +21,8 @@ trait BaseResponse {
         $statusCode = 200,
         $messageCode = "OK"
     ): JsonResponse {
-        if ($data instanceof LengthAwarePaginator) {
+        if ($data instanceof LengthAwarePaginator 
+            || $data instanceof ResourceCollection) {
             return response()->json([
                 'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
                 'statusCode' => $statusCode,
@@ -56,10 +60,13 @@ trait BaseResponse {
         $statusCode = 500,
         $messageCode = "Internal Server Error"
     ): JsonResponse {
-        $statusCode = (empty($error->getCode())
-            || $error->getCode() === 0)
-            ? $statusCode
-            : $error->getCode();
+        $statusCode = empty(BaseHTTPResponse::$HTTP[$error->getCode()]) 
+        ? 500
+        : $error->getCode();
+
+        $status = empty(BaseHTTPResponse::$HTTP[$error->getCode()]) 
+                ? $messageCode 
+                : BaseHTTPResponse::$HTTP[$statusCode];
         $message = (empty($error->getMessage()))
             ? $message
             : $error->getMessage();
@@ -69,7 +76,7 @@ trait BaseResponse {
             $content = $error->errors();
         }
         return response()->json([
-            'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
+            'status' => $status,
             'statusCode' => $statusCode,
             'message' => $message,
             'error' => [

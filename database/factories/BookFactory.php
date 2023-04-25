@@ -18,6 +18,7 @@ class BookFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'image' => fake()->imageUrl(),
             'quantity' => fake()->numberBetween(0,200),
             'price' => fake()->numberBetween(20000,200000),
             'loan_price' => fake()->numberBetween(5000,20000),

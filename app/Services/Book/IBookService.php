@@ -18,7 +18,7 @@ interface IBookService{
     /**
      * Cập nhập sách
      */
-    public static function updateBook($id, $data);
+    public static function updateBook($data);
     /**
      * Xóa 1 sách theo ID
      */

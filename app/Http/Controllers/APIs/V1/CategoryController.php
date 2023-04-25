@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\APIs\V1;
 
+use App\Filters\V1\CategoryFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Category\StoreCategoryRequest;
 use App\Http\Requests\V1\Category\UpdateCategoryRequest;
@@ -10,7 +11,7 @@ use App\Http\Resources\CategoryResourceCollection;
 use App\Http\Responses\BaseResponse;
 use App\Models\Category;
 use App\Repositories\Category\CategoryRepository;
-use App\Services\V1\CategoryQuery;
+use App\Services\Category\CategoryService;
 use Illuminate\Http\Request;
     
 class CategoryController extends Controller
@@ -29,30 +30,26 @@ class CategoryController extends Controller
      */
     public function __construct(){
         $this->categoryRepo = new CategoryRepository;
+        new CategoryService(new CategoryRepository());
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        // $listOfCategory = $this->categoryRepo->findAll(10);
-        // return $this->success($request, $listOfCategory,"Lấy ra tất cả loại sách");
-        $filter = new CategoryQuery();
-        $queryItems = $filter->transform($request);
+        try{
+            //lọc 
+            $filter = new CategoryFilter();
+            $queryItems = $filter->transform($request);
 
-        if(count($queryItems)==0){
-            return new CategoryResourceCollection(Category::paginate());
-        }else{
-            return new CategoryResourceCollection(Category::where($queryItems)->paginate());
+            $data = CategoryService::getAllCategory($queryItems);
+            $data = new CategoryResourceCollection($data);
+        
+            return $this->success($request,$data,"Lấy tất cả các thể loại sách thành công");
+        } catch (\Throwable $erro){
+            return $this->error($request, $erro, $erro->getMessage()|| "Lấy tất cả thể loại sách thất bại");
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        
     }
 
     /**
@@ -60,7 +57,12 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        return new CategoryResource(Category::create($request->all()));
+        try{
+            $data = CategoryService::createCategory($request->toArray());
+            return $this->success($request,$data,"Tạo mới thành công");
+        }catch(\Throwable $error){
+            return $this->error($request,$error, $error->getMessage() || "Tạo mới thể loại sách thất bại ");
+        }
     }
 
     /**
@@ -68,31 +70,31 @@ class CategoryController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $category = $this->categoryRepo->findOne($id);
-        if(empty($category)){
-            return $this->error($request,"Loại sách không tồn tại");
+        try{
+            // gọi hàm lấy ra chi tiết 1 loại sách theo ID
+            $data = CategoryService::getByIdCategory($id);
+            // chuyển dạng 
+            $data = new CategoryResource($data);
+            return $this->success($request,$data,"lấy chi tiếc loại sách thành công");
+        }catch(\Throwable $error){
+            return $this->error($request, $error, $error->getMessage()||"Lấy chi tiết loại sách thất bại");
         }
-        return $this->success($request,$category,"Lấy thành công loại sách yêu cầu ");
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Category $category)
-    {
-        //
-    }
     /**
      * Update the specified resource in storage.
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        $category->update($request->all());
-
-        if(empty($category)){
-            return $this->error($request,"Loại sách không tồn tại");
+        try{
+            // gọi hàm cập nhập sách
+            $data = CategoryService::updateCategory($request);
+            //chuyển về dạng
+            $data = new CategoryResource($data);
+            return  $this->success($request, $data, "Cập nhập thành công");
+        }catch(\Throwable $error){
+            return $this->error($request, $error, $error->getMessage()||"Cập nhập thất bại");
         }
-        return $this->success($request,$category,"Cập nhập loại sách yêu cầu thành công ");
     }
 
     /**

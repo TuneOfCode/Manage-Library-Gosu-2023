@@ -2,59 +2,126 @@
 
 namespace App\Services\Book;
 
+use App\Constants\GlobalConstant;
+use App\Http\Resources\BookResource;
 use App\Http\Resources\BookResourceCollection;
 use App\Models\Book;
-use App\Repositories\Book\BookRepository;
+use App\Repositories\Book\IBookRepository;
 use App\Repositories\IBaseRepository;
 use App\Services\Book\IBookService;
+use Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class BookService implements IBookService
 {
     /**
      * 
      */
-    private static IBaseRepository $bookRepo;
+    private static IBookRepository $bookRepo;
     /**
      * 
      */
-    public function __construct(IBaseRepository $bookRepo) {
+    public function __construct(IBookRepository $bookRepo) {
         self::$bookRepo = $bookRepo;
     }
     public static function getAllBook($attributes)
     {
-        // return Book::all();
-        // $result = null;
-        // if(count($attributes)==0){
-        //     $result = new BookResourceCollection(Book::paginate());
-        // }else{
-        //     $result = new BookResourceCollection(Book::where($attributes)->paginate());
-        // }
-        $result = new BookResourceCollection(self::$bookRepo->findAll($attributes, 10));
-        dd($result);    
-        // dd(Book::where(['name', 'like', 'ce'])->paginate(10));
+        $result = self::$bookRepo->findAll($attributes, 10);
         return $result;
     }
 
     public static function getByIdBook($id)
     {
-        return Book::findOrFail($id);
+        $result = self::$bookRepo->findById($id);
+        $status = $result->status;
+        // !$status && Auth::user()->hasRole('member')
+        // trạng thái sách bị khóa và vai trò là người dùng 
+        // thì không thể truy cập được
+        if (!$status ) {
+            throw new \Exception("Sách không tìm thấy", 404);       
+        }
+        return $result;
     }
 
     public static function createBook($data)
     {
-        return Book::create($data);
+        // Kiểm tra tển sách và tác giả có trùng trong CSDL hay không
+        // điều kiện để trùng sách là có cùng tên và tác giả của sách đó
+        $oldBook = self::$bookRepo->findOne([
+            'name' => $data['name'],
+            'author' => $data['author'],
+            'category_id' => $data['category_id'],
+        ]);
+        $newBook = [];
+        $bookId = 0;
+        // không trùng
+        if (empty($oldBook)) {
+            // xử lý ngày tháng năm
+            $date = Carbon::createFromFormat('d/m/Y', $data['publishedAt']);
+            $data['published_at'] = $date->format(GlobalConstant::$FORMAT_DATETIME_DB);
+            // xử lý ảnh upload
+            $image = $data['image'];
+            // Đặt lại tên file
+            $currentDatetime = now()->format('YmdHis');
+            $fileName = $image->getClientOriginalName();
+            $imageName = "$currentDatetime-$fileName";
+
+            // Lưu file vào thư mục
+            $path = $image->storeAs('public/books', $imageName);
+
+            // lấy đường liên kết
+            $linkImage = Storage::url($path);
+            // tạo mới sách
+            $data['image'] = $linkImage;
+            $newBook = self::$bookRepo->create($data);
+            $bookId = $newBook->id;
+        } else { // trùng
+            // sửa lại số lượng
+            $newQuantity = $oldBook->quantity + $data['quantity'];
+            self::$bookRepo->update(['quantity' => $newQuantity], $oldBook->id);
+            $bookId = $oldBook->id;
+        }
+        $newBook = self::$bookRepo->findById($bookId);
+        return $newBook;
     }
 
-    public static function updateBook($id, $data)
+    public static function updateBook($data)
     {
-        $book = Book::findOrFail($id);
-        $book->update($data);
+
+        dd($data->toArray());
+        $updateData = $data->toArray();
+        $method = $data->getMethod();
+        if ($method === 'PATCH') {
+
+        }
+        $id = 0;// $updateData['id'];
+        dd($data);
+        $isUpdated = self::$bookRepo->update($updateData, $id);
+        if (!$isUpdated) {
+            throw new \Exception("Cập nhật thất bại", 400);                  
+        }
+        $book = self::$bookRepo->findById($id);
         return $book;
     }
 
     public static function deleteBook($id)
     {
-        $book = Book::findOrFail($id);
-        $book->delete();
+        self::$bookRepo->destroy($id);
+        return true;
+    }
+    /**
+     * 
+     */
+    public static function newBooks()
+    {
+        return self::$bookRepo->getTypeBook();
+    }
+    /**
+     * sách cũ
+     */
+    public static function oldBooks()
+    {
+        return self::$bookRepo->getTypeBook('asc');
     }
 }

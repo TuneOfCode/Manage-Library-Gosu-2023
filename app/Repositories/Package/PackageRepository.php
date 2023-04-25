@@ -4,7 +4,7 @@ namespace App\Repositories\Package;
 use App\Models\Package;
 use App\Repositories\BaseRepository;
 
-class PackageRepository extends BaseRepository {
+class PackageRepository extends BaseRepository implements IPackageRepository{
     /**
      * Cài đặt hàm trừu tượng
      */

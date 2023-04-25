@@ -26,6 +26,7 @@ class UpdateBookRequest extends FormRequest
         if($method == 'PUT'){
             return [
             'name'=>['required'],
+            'image' => 'required|mimes:jpeg,png,bmp',
             'quantity'=>['required'],
             'price'=>['required'],
             'loanPrice'=>['required'],
@@ -33,10 +34,12 @@ class UpdateBookRequest extends FormRequest
             'author'=>['required'],
             'publishedAt'=>['required'],
             'categoryId' =>['required'],
+            'id' => ['required', 'integer', 'exists:books,id'],
             ];
         }else{
             return [
                 'name'=>['sometimes','required'],
+                'image' => 'sometimes|mimes:jpeg,png,bmp',
                 'quantity'=>['sometimes','required'],
                 'price'=>['sometimes','required'],
                 'loanPrice'=>['sometimes','required'],
@@ -44,6 +47,7 @@ class UpdateBookRequest extends FormRequest
                 'author'=>['sometimes','required'],
                 'publishedAt'=>['sometimes','required'],
                 'categoryId' =>['sometimes','required'],
+                'id' => ['sometimes', 'integer', 'exists:books,id'],
                 ];
         }
     }

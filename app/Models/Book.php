@@ -10,6 +10,7 @@ class Book extends Model
     use HasFactory;
     protected $fillable = [
         'name',
+        'image',
         'quantity',
         'price',
         'loan_price',
@@ -22,6 +23,8 @@ class Book extends Model
      * Bật created_at và updated_at
      */
     public $timestamps = true;
+   
+   
     /**
      * Mộ sách chỉ có 1 loại
      *
@@ -32,4 +35,6 @@ class Book extends Model
     public function scopeFilterBooks(){
         
     }
+   
+    
 }

@@ -2,11 +2,18 @@
 
 namespace App\Exceptions;
 
+use App\Http\Responses\BaseHTTPResponse;
+use App\Http\Responses\BaseResponse;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
-class Handler extends ExceptionHandler
-{
+class Handler extends ExceptionHandler {
+    /**
+     * Sử dụng kiểu định dạng trả về API
+     */
+    use BaseResponse;
     /**
      * A list of exception types with their corresponding custom log levels.
      *
@@ -39,10 +46,21 @@ class Handler extends ExceptionHandler
     /**
      * Register the exception handling callbacks for the application.
      */
-    public function register(): void
-    {
+    public function register(): void {
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+    /**
+     * Xử lý ngoại lệ không được uỷ quyền
+     */
+    protected function unauthenticated($request, AuthenticationException $error) {
+        return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNAUTHORIZED);
+    }
+    /**
+     * Xử lý ngoại lệ yêu cầu từ client
+     */
+    public function convertValidationExceptionToResponse(ValidationException $error, $request) {
+        return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNPROCESSABLE_ENTITY);
     }
 }

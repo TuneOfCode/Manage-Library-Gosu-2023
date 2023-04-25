@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->string('name');
+            $table->string('image');
             $table->integer('quantity');
             $table->integer('price');
             $table->integer('loan_price');

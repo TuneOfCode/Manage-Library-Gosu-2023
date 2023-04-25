@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Repositories;
+
 use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseRepository implements IBaseRepository {
@@ -25,6 +26,14 @@ abstract class BaseRepository implements IBaseRepository {
         return $this->_model = app()->make($this->getModel());
     }
     /**
+     * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện
+     * @param mixed $attributes
+     * @return mixed
+     */
+    public function findOne(mixed $attributes) {
+        return $this->_model->where($attributes)->first();
+    }
+    /**
      * Hiển thị tất cả bản ghi
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
@@ -36,7 +45,7 @@ abstract class BaseRepository implements IBaseRepository {
      * @param mixed $id 
      * @return mixed
      */
-    public function findOne(mixed $id) {
+    public function findById(mixed $id) {
         return $this->_model->find($id);
     }
     /**
@@ -54,13 +63,17 @@ abstract class BaseRepository implements IBaseRepository {
      * @return boolean|mixed
      */
     public function update(mixed $attributes, mixed $id) {
-        $item = $this->findOne($id);
+        $item = $this->_model::find($id);
         if (empty($item) || !isset($item)) {
             return false;
         }
 
-        $item->update($attributes);
-        return $item;
+        foreach ($attributes as $key => $value) {
+            $item[$key] = $value;
+        }
+
+        $item->save();
+        return true;
     }
     /**
      * Xóa một bản ghi
@@ -68,12 +81,12 @@ abstract class BaseRepository implements IBaseRepository {
      * @return boolean|mixed 
      */
     public function destroy(mixed $id) {
-        $item = $this->findOne($id);
+        $item = $this->findById($id);
         if (empty($item) || !isset($item)) {
             return false;
         }
 
         $item->delete();
-        return $item;
+        return true;
     }
 }
