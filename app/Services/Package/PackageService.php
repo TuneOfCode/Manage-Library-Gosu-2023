@@ -40,10 +40,15 @@ class PackageService implements IPackageService {
         // xử lý request khi có mối quan hệ 
         $relations = self::$filter->getRelations($request);
 
-        // lấy ra danh sách gói ưu đãi
-        if (Auth::user()->hasRole(RoleConstant::$MEMBER)) {
-            $query = array_merge($query, ['is_active' => 1]);
+        // lấy ra danh sách gói ưu đãi với admin
+        if (!empty(Auth::user()) && Auth::user()->hasRole(RoleConstant::$ADMIN)) {
+            $result = self::$packageRepo->findAll($query, $relations, 10);
+            return $result;
         }
+
+        // lấy ra danh sách những cuốn sách được cho phép
+        // hiển thị với thành viên
+        $query = array_merge($query, ['is_active' => 1]);
         $result = self::$packageRepo->findAll($query, $relations, 10);
         return $result;
     }
@@ -56,7 +61,12 @@ class PackageService implements IPackageService {
 
         // lấy ra chi tiết gói ưu đãi
         $result = self::$packageRepo->findById($id, $relations);
-        if (empty($result)) {
+        if (
+            empty($result)
+            || (!$result['is_active'] && !Auth::check()) // khách
+            || (!$result['is_active']
+                && Auth::check() && Auth::user()->hasRole(RoleConstant::$MEMBER)) // thành viên
+        ) {
             throw new \Exception(
                 MessageConstant::$PACKAGE_NOT_EXIST,
                 BaseHTTPResponse::$BAD_REQUEST

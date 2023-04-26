@@ -71,4 +71,11 @@ class GlobalConstant {
      * Vai trò thành viên
      */
     static string $ROLE_MEMBER = "role:member";
+    /**
+     * Nhãn sách
+     */
+    static string $LABEL_NORMAL = "normal";
+    static string $LABEL_VIP = "vip";
+    static string $LABEL_HOT = "hot";
+    static string $LABEL_TRENDING = "trending";
 }

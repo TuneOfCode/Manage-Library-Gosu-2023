@@ -7,6 +7,7 @@ use App\Http\Responses\BaseResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Throwable;
@@ -57,6 +58,58 @@ class Handler extends ExceptionHandler {
      * Xử lý ngoại lệ không được uỷ quyền
      */
     protected function unauthenticated($request, AuthenticationException $error) {
+        // cho phép bỏ qua bước kiểm tra xác thực
+        // hiển thị cho người dùng chưa đăng nhập (guest)
+        if ($request->getMethod() === "GET") {
+            if (strpos($request->getRequestUri(), 'packages/') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\PackageController@show',
+                    [
+                        'request' => $request,
+                        'id' => $request->route('id')
+                    ]
+                );
+            }
+            if (strpos($request->getRequestUri(), 'packages') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\PackageController@index',
+                    ['request' => $request]
+                );
+            }
+
+            if (strpos($request->getRequestUri(), 'categories/') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\CategoryController@show',
+                    [
+                        'request' => $request,
+                        'id' => $request->route('id')
+                    ]
+                );
+            }
+            if (strpos($request->getRequestUri(), 'categories') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\CategoryController@index',
+                    ['request' => $request]
+                );
+            }
+
+            if (strpos($request->getRequestUri(), 'books/') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\BookController@show',
+                    [
+                        'request' => $request,
+                        'id' => $request->route('id')
+                    ]
+                );
+            }
+            if (strpos($request->getRequestUri(), 'books') > 0) {
+                return app()->call(
+                    'App\Http\Controllers\APIs\V1\BookController@index',
+                    ['request' => $request]
+                );
+            }
+        }
+
         return $this->error($request, $error, $error->getMessage(), BaseHTTPResponse::$UNAUTHORIZED);
     }
     /**

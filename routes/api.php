@@ -3,6 +3,7 @@
 use App\Constants\GlobalConstant;
 use App\Constants\PermissionConstant;
 use App\Http\Controllers\APIs\V1\AuthController;
+use App\Http\Controllers\APIs\V1\BookController;
 use App\Http\Controllers\APIs\V1\CategoryController;
 use App\Http\Controllers\APIs\V1\PackageController;
 use App\Http\Controllers\APIs\V1\UserController;
@@ -163,6 +164,36 @@ Route::group([
             CategoryController::class,
             'destroy'
         ])->middleware('permission:' . PermissionConstant::$DELETE_CATEGORY_BOOK);
+    });
+    #endregion
+
+    #region Book
+    Route::group([
+        'prefix' => 'books',
+        'middleware' => [
+            GlobalConstant::$AUTH_MIDDLEWARE
+        ]
+    ], function () {
+        Route::get('/', [
+            BookController::class,
+            'index'
+        ])->middleware('permission:' . PermissionConstant::$READ_ALL_BOOK);
+        Route::get('/{id}', [
+            BookController::class,
+            'show'
+        ])->middleware('permission:' . PermissionConstant::$READ_A_BOOK);
+        Route::post('/', [
+            BookController::class,
+            'store'
+        ])->middleware('permission:' . PermissionConstant::$CREATE_BOOK);
+        Route::post('/{id}', [
+            BookController::class,
+            'update'
+        ])->middleware('permission:' . PermissionConstant::$UPDATE_BOOK);
+        Route::delete('/{id}', [
+            BookController::class,
+            'destroy'
+        ])->middleware('permission:' . PermissionConstant::$DELETE_BOOK);
     });
     #endregion
 });
