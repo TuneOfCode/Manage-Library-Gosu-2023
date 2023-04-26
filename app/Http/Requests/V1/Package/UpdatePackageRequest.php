@@ -18,6 +18,14 @@ class UpdatePackageRequest extends FormRequest {
      * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
     public function rules(): array {
+        if ($this->method() === 'PUT') {
+            return [
+                'name' => ['required', 'string', 'max:255', 'unique:packages'],
+                'price' => ['required', 'numeric', 'min:0'],
+                'description' => ['required', 'string', 'max:255'],
+                'isActive' => ['required'],
+            ];
+        }
         return [
             'name' => ['sometimes', 'string', 'max:255', 'unique:packages'],
             'price' => ['sometimes', 'numeric', 'min:0'],

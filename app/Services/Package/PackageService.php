@@ -101,8 +101,8 @@ class PackageService implements IPackageService {
             ? 1
             : 0;
         if ($method == 'PUT') {
-            $package = self::$packageRepo->findById($id);
             self::$packageRepo->update($updatePackageData, $id);
+            $package = self::$packageRepo->findById($id);
             return $package;
         }
 

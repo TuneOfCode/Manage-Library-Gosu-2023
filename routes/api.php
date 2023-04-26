@@ -3,6 +3,7 @@
 use App\Constants\GlobalConstant;
 use App\Constants\PermissionConstant;
 use App\Http\Controllers\APIs\V1\AuthController;
+use App\Http\Controllers\APIs\V1\CategoryController;
 use App\Http\Controllers\APIs\V1\PackageController;
 use App\Http\Controllers\APIs\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -132,6 +133,36 @@ Route::group([
             PackageController::class,
             'register'
         ])->middleware('permission:' . PermissionConstant::$REGISTER_PACKAGE);
+    });
+    #endregion
+
+    #region Category
+    Route::group([
+        'prefix' => 'categories',
+        'middleware' => [
+            GlobalConstant::$AUTH_MIDDLEWARE
+        ]
+    ], function () {
+        Route::get('/', [
+            CategoryController::class,
+            'index'
+        ])->middleware('permission:' . PermissionConstant::$READ_ALL_CATEGORY_BOOK);
+        Route::get('/{id}', [
+            CategoryController::class,
+            'show'
+        ])->middleware('permission:' . PermissionConstant::$READ_A_CATEGORY_BOOK);
+        Route::post('/', [
+            CategoryController::class,
+            'store'
+        ])->middleware('permission:' . PermissionConstant::$CREATE_CATEGORY_BOOK);
+        Route::put('/{id}', [
+            CategoryController::class,
+            'update'
+        ])->middleware('permission:' . PermissionConstant::$UPDATE_CATEGORY_BOOK);
+        Route::delete('/{id}', [
+            CategoryController::class,
+            'destroy'
+        ])->middleware('permission:' . PermissionConstant::$DELETE_CATEGORY_BOOK);
     });
     #endregion
 });

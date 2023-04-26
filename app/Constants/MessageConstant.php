@@ -76,4 +76,56 @@ class MessageConstant {
     public static string $NOT_ENOUGH_BALANCE = "Your balance is not enough to register this package";
     public static string $PACKAGE_IS_USING = "Package is using";
     #endregion
+
+    #region Category
+    public static string $CREATE_CATEGORY_SUCCESS = "Create category success!";
+    public static string $CREATE_CATEGORY_FAILED = "Create category failed!";
+    public static string $UPDATE_CATEGORY_SUCCESS = "Update category success!";
+    public static string $UPDATE_CATEGORY_FAILED = "Update category failed!";
+    public static string $DELETE_CATEGORY_SUCCESS = "Delete category success!";
+    public static string $DELETE_CATEGORY_FAILED = "Delete category failed!";
+    public static string $GET_CATEGORY_SUCCESS = "Get category success!";
+    public static string $GET_CATEGORY_FAILED = "Get category failed!";
+    public static string $GET_LIST_CATEGORY_SUCCESS = "Get list category success!";
+    public static string $GET_LIST_CATEGORY_FAILED = "Get list category failed!";
+    public static string $CATEGORY_NOT_EXIST = "Category does not exist";
+    public static string $CATEGORY_EXIST = "Category does exist";
+    #endregion
+
+    #region Book
+    public static string $CREATE_BOOK_SUCCESS = "Create book success!";
+    public static string $CREATE_BOOK_FAILED = "Create book failed!";
+    public static string $UPDATE_BOOK_SUCCESS = "Update book success!";
+    public static string $UPDATE_BOOK_FAILED = "Update book failed!";
+    public static string $DELETE_BOOK_SUCCESS = "Delete book success!";
+    public static string $DELETE_BOOK_FAILED = "Delete book failed!";
+    public static string $GET_BOOK_SUCCESS = "Get book success!";
+    public static string $GET_BOOK_FAILED = "Get book failed!";
+    public static string $GET_LIST_BOOK_SUCCESS = "Get list book success!";
+    public static string $GET_LIST_BOOK_FAILED = "Get list book failed!";
+    public static string $BOOK_NOT_EXIST = "Book does not exist";
+    public static string $BOOK_EXIST = "Book does exist";
+    public static string $BOOK_IS_USING = "Book is using";
+    public static string $BOOK_IS_NOT_USING = "Book is not using";
+    public static string $BOOK_IS_NOT_AVAILABLE = "Book is not available";
+    public static string $BOOK_IS_AVAILABLE = "Book is available";
+    public static string $BOOK_IS_NOT_BORROWED = "Book is not borrowed";
+    public static string $BOOK_IS_BORROWED = "Book is borrowed";
+    public static string $BOOK_IS_NOT_RETURNED = "Book is not returned";
+    public static string $BOOK_IS_RETURNED = "Book is returned";
+    public static string $BOOK_IS_NOT_DELETED = "Book is not deleted";
+    public static string $BOOK_IS_DELETED = "Book is deleted";
+    public static string $BOOK_IS_NOT_RESTORED = "Book is not restored";
+    public static string $BOOK_IS_RESTORED = "Book is restored";
+    public static string $BOOK_IS_NOT_RENEWED = "Book is not renewed";
+    public static string $BOOK_IS_RENEWED = "Book is renewed";
+    public static string $BOOK_IS_NOT_REJECTED = "Book is not rejected";
+    public static string $BOOK_IS_REJECTED = "Book is rejected";
+    public static string $BOOK_IS_NOT_APPROVED = "Book is not approved";
+    public static string $BOOK_IS_APPROVED = "Book is approved";
+    public static string $BOOK_IS_NOT_REJECTED_BY_ADMIN = "Book is not rejected by admin";
+    public static string $BOOK_IS_REJECTED_BY_ADMIN = "Book is rejected by admin";
+    public static string $BOOK_IS_NOT_APPROVED_BY_ADMIN = "Book is not approved by admin";
+    public static string $BOOK_IS_APPROVED_BY_ADMIN = "Book is approved by admin";
+    #endregion
 }
