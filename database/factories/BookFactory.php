@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\LabelBook;
+use App\Enums\BookLabel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +17,7 @@ class BookFactory extends Factory {
     public function definition(): array {
         return [
             'name' => fake()->name(),
-            'label' => fake()->randomElement(LabelBook::MAP_VALUE),
+            'label' => fake()->randomElement(BookLabel::MAP_VALUE),
             'category_id' => 1,
             'image' => fake()->imageUrl(),
             'description' => fake()->text(),

@@ -33,4 +33,10 @@ class Book extends Model {
     public function category() {
         return $this->belongsTo(Category::class);
     }
+    /**
+     * Nhiều cuốn sách có thể được mượn bởi nhiều thành viên
+     */
+    public function users() {
+        return $this->belongsToMany(User::class, 'book_user', 'book_id', 'user_id');
+    }
 }

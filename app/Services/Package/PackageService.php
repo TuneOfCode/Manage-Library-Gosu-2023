@@ -40,16 +40,33 @@ class PackageService implements IPackageService {
         // xử lý request khi có mối quan hệ 
         $relations = self::$filter->getRelations($request);
 
+        // xử lý nếu có sắp xếp
+        $column = $request->column ?? 'id';
+        $sortType = $request->sortType ?? 'asc';
+        $limit = $request->limit ?? 10;
+
         // lấy ra danh sách gói ưu đãi với admin
         if (!empty(Auth::user()) && Auth::user()->hasRole(RoleConstant::$ADMIN)) {
-            $result = self::$packageRepo->findAll($query, $relations, 10);
+            $result = self::$packageRepo->findAll(
+                $query,
+                $relations,
+                $column,
+                $sortType,
+                $limit
+            );
             return $result;
         }
 
         // lấy ra danh sách những cuốn sách được cho phép
         // hiển thị với thành viên
         $query = array_merge($query, ['is_active' => 1]);
-        $result = self::$packageRepo->findAll($query, $relations, 10);
+        $result = self::$packageRepo->findAll(
+            $query,
+            $relations,
+            $column,
+            $sortType,
+            $limit
+        );
         return $result;
     }
     /**
@@ -194,6 +211,11 @@ class PackageService implements IPackageService {
 
         // trừ tiền trong tài khoản của thành viên
         $newBalance = $user['balance'] - $package['price'];
+
+        // nếu có giảm giá
+        if ($package['discount'] > 0) {
+            $newBalance = $newBalance - ($package['discount'] * $package['price'] / 100);
+        }
 
         // cập nhật lại gói và số dư tài khoản của thành viên
         self::$userRepo->update([

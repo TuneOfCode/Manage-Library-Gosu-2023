@@ -6,7 +6,13 @@ interface IBaseRepository {
     /**
      * Hiển thị tất cả bản ghi
      */
-    public function findAll(array $attributes, array $relations = [], int $pageSize = 10);
+    public function findAll(
+        array $attributes,
+        array $relations = [],
+        string $column = "id",
+        string $sortType = "asc",
+        int $pageSize = 10
+    );
     /**
      * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện
      */

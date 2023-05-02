@@ -48,6 +48,7 @@ class PermissionConstant {
     static string $BORROW_BOOK = 'borrow-book';
     static string $RETURN_BOOK = 'return-book';
     static string $APPROVE_BOOK = 'approve-book';
+    static string $CANCEL_BOOK = 'cancel-book';
     static string $REJECT_BOOK = 'reject-book';
     static string $PAY_MONEY = 'pay-money';
     /**

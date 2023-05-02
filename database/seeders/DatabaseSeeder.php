@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder {
             PackageSeeder::class,
             UserSeeder::class,
             CategorySeeder::class,
+            BookUserSeeder::class,
         ]);
     }
 }

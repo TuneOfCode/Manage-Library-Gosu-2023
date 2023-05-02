@@ -39,41 +39,43 @@ class BookService implements IBookService {
         // xử lý request khi có mối quan hệ 
         $relations = self::$filter->getRelations($request);
 
+        // lấy ra những cuốn sách theo yêu cầu
+        // xử lý nếu có sắp xếp
+        $column = $request->column ?? 'created_at';
+        $sortType = $request->sortType ?? 'asc';
+        $limit = $request->limit ?? 10;
+
         // lấy ra danh sách những cuốn sách với admin
         if (!empty(Auth::user()) && Auth::user()->hasRole(RoleConstant::$ADMIN)) {
-            $result = self::$bookRepo->findAll($query, $relations, 10);
-            // lấy ra những cuốn sách theo yêu cầu
-            $attributes = [
-                'query' => $query,
-                'relations' => $relations,
-                'limit' => $request->limit,
-                'pazeSize' => $request->pazeSize,
-                'column' => $request->column
-            ];
-            if ($request->get('type') === 'old') {
-                $attributes['sortType'] = 'asc';
-            }
-            $result = self::$bookRepo->getAttributesBooks($attributes);
+            $result = self::$bookRepo->findAll(
+                $query,
+                $relations,
+                $column,
+                $sortType,
+                $limit
+            );
+            // if ($request->get('type') === 'old') {
+            //     $attributes['sortType'] = 'asc';
+            // }
+            // $result = self::$bookRepo->getAttributesBooks($attributes);
             return $result;
         }
 
         // lấy ra danh sách những cuốn sách được cho phép
         // hiển thị với thành viên
         $query = array_merge($query, ['status' => 1]);
-        $result = self::$bookRepo->findAll($query, $relations, 10);
+        $result = self::$bookRepo->findAll(
+            $query,
+            $relations,
+            $column,
+            $sortType,
+            $limit
+        );
 
-        // lấy ra những cuốn sách theo yêu cầu
-        $attributes = [
-            'query' => $query,
-            'relations' => $relations,
-            'limit' => $request->limit,
-            'pazeSize' => $request->pazeSize,
-            'column' => $request->column
-        ];
-        if ($request->get('type') === 'old') {
-            $attributes['sortType'] = 'asc';
-        }
-        $result = self::$bookRepo->getAttributesBooks($attributes);
+        // if ($request->get('type') === 'old') {
+        //     $attributes['sortType'] = 'asc';
+        // }
+        // $result = self::$bookRepo->getAttributesBooks($attributes);
         return $result;
     }
     /**

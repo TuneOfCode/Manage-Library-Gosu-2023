@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\V1\Book;
 
-use App\Enums\LabelBook;
+use App\Enums\BookLabel;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,7 +22,7 @@ class StoreBookRequest extends FormRequest {
     public function rules(): array {
         return [
             'name' => ['required', 'string'],
-            'label' => ['required', 'string', Rule::in(LabelBook::MAP_VALUE)],
+            'label' => ['required', 'string', Rule::in(BookLabel::MAP_VALUE)],
             'description' => ['sometimes', 'string'],
             'position' => ['required', 'string'],
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',

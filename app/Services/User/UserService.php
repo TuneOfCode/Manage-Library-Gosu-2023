@@ -38,8 +38,19 @@ class UserService implements IUserService {
         // xử lý request khi có mối quan hệ 
         $relations = self::$filter->getRelations($request);
 
+        // xử lý nếu có sắp xếp
+        $column = $request->column ?? 'id';
+        $sortType = $request->sortType ?? 'asc';
+        $limit = $request->limit ?? 10;
+
         // lấy ra danh sách người dùng
-        $result = self::$userRepo->findAll($query, $relations, 10);
+        $result = self::$userRepo->findAll(
+            $query,
+            $relations,
+            $column,
+            $sortType,
+            $limit
+        );
         return $result;
     }
     /**

@@ -16,7 +16,9 @@ class PackageResource extends JsonResource {
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'type' => $this->type,
             'price' => (float) $this->price,
+            'discount' => (float) $this->discount,
             'description' => $this->description,
             'isActive' => $this->is_active,
             'users' => new UserResourceCollection($this->whenLoaded('users')),

@@ -4,6 +4,7 @@ use App\Constants\GlobalConstant;
 use App\Constants\PermissionConstant;
 use App\Http\Controllers\APIs\V1\AuthController;
 use App\Http\Controllers\APIs\V1\BookController;
+use App\Http\Controllers\APIs\V1\BookUserController;
 use App\Http\Controllers\APIs\V1\CategoryController;
 use App\Http\Controllers\APIs\V1\PackageController;
 use App\Http\Controllers\APIs\V1\UserController;
@@ -194,6 +195,52 @@ Route::group([
             BookController::class,
             'destroy'
         ])->middleware('permission:' . PermissionConstant::$DELETE_BOOK);
+    });
+    #endregion
+
+    #region BookUser
+    Route::group([
+        'prefix' => 'book-user',
+        'middleware' => [
+            GlobalConstant::$AUTH_MIDDLEWARE
+        ]
+    ], function () {
+        Route::get('/', [
+            BookUserController::class,
+            'index'
+        ])->middleware('permission:' . PermissionConstant::$READ_STATISTIC);
+        Route::get('/{id}', [
+            BookUserController::class,
+            'show'
+        ])->middleware('permission:' . PermissionConstant::$READ_STATISTIC);
+        Route::post('/borrow', [
+            BookUserController::class,
+            'store'
+        ])->middleware('permission:' . PermissionConstant::$BORROW_BOOK);
+        Route::post('/approve', [
+            BookUserController::class,
+            'approve'
+        ])->middleware('permission:' . PermissionConstant::$APPROVE_BOOK);
+        Route::delete('/reject', [
+            BookUserController::class,
+            'reject'
+        ])->middleware('permission:' . PermissionConstant::$REJECT_BOOK);
+        Route::delete('/cancel', [
+            BookUserController::class,
+            'cancel'
+        ])->middleware('permission:' . PermissionConstant::$CANCEL_BOOK);
+        Route::delete('/pay', [
+            BookUserController::class,
+            'pay'
+        ])->middleware('permission:' . PermissionConstant::$PAY_MONEY);
+        Route::delete('/return', [
+            BookUserController::class,
+            'return'
+        ])->middleware('permission:' . PermissionConstant::$RETURN_BOOK);
+        Route::delete('/', [
+            BookUserController::class,
+            'destroy'
+        ])->middleware('permission:' . PermissionConstant::$DELETE_STATISTIC);
     });
     #endregion
 });

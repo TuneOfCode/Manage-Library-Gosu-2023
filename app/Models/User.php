@@ -73,4 +73,10 @@ class User extends Authenticatable {
             ['email', $username],
         )->get(); // change column name whatever you use in credentials
     }
+    /**
+     * Nhiều thành viên có thể mượn nhiều sách
+     */
+    public function books() {
+        return $this->belongsToMany(Book::class, 'book_user', 'user_id', 'book_id');
+    }
 }

@@ -12,7 +12,7 @@ class MessageConstant {
     public static string $VERIFY_EMAIL_FAILED = "Verify email failed!";
     public static string $LOGIN_SUCCESS = "Login success!";
     public static string $LOGIN_FAILED = "Login failed!";
-    public static string $ME_SUCCESS = "Get current member success!";
+    public static string $ME_SUCCESS = "Get curhistory rent member success!";
     public static string $ME_FAILED = "Get current member failed!";
     public static string $FORGOT_PASSWORD_SUCCESS = "The system created new password! Please go to your email and receive it.";
     public static string $FORGOT_PASSWORD_FAILED = "Create new password or email forgot password failed!";
@@ -127,5 +127,28 @@ class MessageConstant {
     public static string $BOOK_IS_REJECTED_BY_ADMIN = "Book is rejected by admin";
     public static string $BOOK_IS_NOT_APPROVED_BY_ADMIN = "Book is not approved by admin";
     public static string $BOOK_IS_APPROVED_BY_ADMIN = "Book is approved by admin";
+    #endregion
+
+    #region BookUser
+    public static string $GET_LIST_BOOK_USER_SUCCESS = "Get list history rent books success!";
+    public static string $GET_LIST_BOOK_USER_FAILED = "Get list history rent books failed!";
+    public static string $GET_BOOK_USER_SUCCESS = "Get history rent book success!";
+    public static string $GET_BOOK_USER_FAILED = "Get history rent book failed!";
+    public static string $BOOK_USER_NOT_EXIST = "Rent book does not exist";
+    public static string $BOOK_USER_EXIST = "Rent book does exist";
+    public static string $BORROW_BOOKS_SUCCESS = "Borrow books success!";
+    public static string $BORROW_BOOKS_FAILED = "Borrow books failed!";
+    public static string $RETURN_BOOKS_SUCCESS = "Return books success!";
+    public static string $RETURN_BOOKS_FAILED = "Return books failed!";
+    public static string $APPROVE_BOOKS_SUCCESS = "Approve books success!";
+    public static string $APPROVE_BOOKS_FAILED = "Approve books failed!";
+    public static string $REJECT_BOOKS_SUCCESS = "Reject books success!";
+    public static string $REJECT_BOOKS_FAILED = "Reject books failed!";
+    public static string $CANCEL_BOOKS_SUCCESS = "Cancel books success!";
+    public static string $CANCEL_BOOKS_FAILED = "Cancel books failed!";
+    public static string $PAY_BOOKS_SUCCESS = "Pay books success!";
+    public static string $PAY_BOOKS_FAILED = "Pay books failed!";
+    public static string $DELETE_BOOK_USER_SUCCESS = "Delete history rent books success!";
+    public static string $DELETE_BOOK_USER_FAILED = "Delete history rent books failed!";
     #endregion
 }

@@ -122,6 +122,10 @@ class UserSeeder extends Seeder {
             "name" => PermissionConstant::$BORROW_BOOK,
             "guard_name" => GlobalConstant::$GUARD_API
         ]);
+        $CANCEL_BOOK = Permission::create([
+            "name" => PermissionConstant::$CANCEL_BOOK,
+            "guard_name" => GlobalConstant::$GUARD_API
+        ]);
         $RETURN_BOOK = Permission::create([
             "name" => PermissionConstant::$RETURN_BOOK,
             "guard_name" => GlobalConstant::$GUARD_API
@@ -235,6 +239,7 @@ class UserSeeder extends Seeder {
             $READ_ALL_BOOK,
             $READ_A_BOOK,
             $BORROW_BOOK,
+            $CANCEL_BOOK,
             $RETURN_BOOK,
             $PAY_MONEY
         ];

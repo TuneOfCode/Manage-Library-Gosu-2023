@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 abstract class BaseRepository implements IBaseRepository {
     /**
@@ -29,8 +30,20 @@ abstract class BaseRepository implements IBaseRepository {
      * Hiển thị tất cả bản ghi
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function findAll(array $attributes, array $relations = [], int $pageSize = 10) {
-        return $this->_model::where($attributes)->with($relations)->paginate($pageSize);
+    public function findAll(
+        array $attributes,
+        array $relations = [],
+        string $column = "id",
+        string $sortType = "asc",
+        int $limit = 10
+    ) {
+        $columns = Schema::getColumnListing($this->_model->getTable());
+        // kiểm tra xem có tồn tại cột đó hay không
+        in_array($column, $columns) ?: $column = 'id';
+        return $this->_model::where($attributes)
+            ->with($relations)
+            ->orderBy($column, $sortType)
+            ->paginate($limit);
     }
     /**
      * Lấy ra chi tiết một bản ghi thông qua mảng điều kiện

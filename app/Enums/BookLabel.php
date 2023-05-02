@@ -11,7 +11,7 @@ use Spatie\Enum\Enum;
  * @method static self TRENDING()
  * @method static self BESTBORROW()
  */
-class LabelBook extends Enum {
+class BookLabel extends Enum {
     const MAP_VALUE = [
         'NORMAL' => 'normal',
         'VIP' => 'vip',
