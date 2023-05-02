@@ -77,6 +77,24 @@ class User extends Authenticatable {
      * Nhiều thành viên có thể mượn nhiều sách
      */
     public function books() {
-        return $this->belongsToMany(Book::class, 'book_user', 'user_id', 'book_id');
+        return $this->belongsToMany(Book::class, 'book_user', 'user_id', 'book_id')
+            ->withPivot(
+                'amount',
+                'payment',
+                'discount',
+                'unit',
+                'extra_money',
+                'status',
+                'approved_at',
+                'rejected_at',
+                'canceled_at',
+                'paid_at',
+                'borrowed_at',
+                'estimated_returned_at',
+                'returned_at',
+                'extra_money_at',
+                'note'
+            )
+            ->withTimestamps();;
     }
 }

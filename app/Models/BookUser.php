@@ -30,4 +30,16 @@ class BookUser extends Pivot {
      * Bật created_at và updated_at
      */
     public $timestamps = true;
+    /**
+     * Một thành viên có nhiều lịch sử thuê sách
+     */
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+    /**
+     * Một sách có nhiều lịch sử thuê sách
+     */
+    public function book() {
+        return $this->belongsTo(Book::class);
+    }
 }

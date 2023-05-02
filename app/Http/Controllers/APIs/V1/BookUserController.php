@@ -4,6 +4,8 @@ namespace App\Http\Controllers\APIs\V1;
 
 use App\Constants\MessageConstant;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\BookUser\BookUserResource;
+use App\Http\Resources\V1\BookUser\BookUserResourceCollection;
 use App\Http\Responses\BaseResponse;
 use App\Repositories\BookUser\BookUserRepository;
 use App\Services\BookUser\BookUserService;
@@ -27,7 +29,9 @@ class BookUserController extends Controller {
     public function index(Request $request) {
         Log::info('***** Lấy ra lịch sử danh sách thuê sách *****');
         try {
-            $data = BookUserService::getBookUserList($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::getBookUserList($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -69,7 +73,9 @@ class BookUserController extends Controller {
     public function show(Request $request, string $id) {
         Log::info('***** Lấy ra thông tin chi tiết lịch sử thuê sách *****');
         try {
-            $data = BookUserService::getBookUserDetail($request, $id);
+            $data = new BookUserResource(
+                BookUserService::getBookUserDetail($request, $id)
+            );
             return $this->success(
                 $request,
                 $data,

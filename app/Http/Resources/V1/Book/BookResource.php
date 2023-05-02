@@ -3,6 +3,7 @@
 namespace App\Http\Resources\V1\Book;
 
 use App\Http\Resources\V1\Category\CategoryResource;
+use App\Http\Resources\V1\User\UserResourceCollection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,7 @@ class BookResource extends JsonResource {
             'author' => $this->author,
             'publishedAt' => $this->published_at,
             'category' => new CategoryResource($this->whenLoaded('category')),
+            'members' => new UserResourceCollection($this->whenLoaded('users')),
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
         ];

@@ -12,7 +12,7 @@ class MessageConstant {
     public static string $VERIFY_EMAIL_FAILED = "Verify email failed!";
     public static string $LOGIN_SUCCESS = "Login success!";
     public static string $LOGIN_FAILED = "Login failed!";
-    public static string $ME_SUCCESS = "Get curhistory rent member success!";
+    public static string $ME_SUCCESS = "Get current member success!";
     public static string $ME_FAILED = "Get current member failed!";
     public static string $FORGOT_PASSWORD_SUCCESS = "The system created new password! Please go to your email and receive it.";
     public static string $FORGOT_PASSWORD_FAILED = "Create new password or email forgot password failed!";

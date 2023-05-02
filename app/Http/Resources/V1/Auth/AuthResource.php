@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\V1\Auth;
 
+use App\Http\Resources\V1\Book\BookResourceCollection;
+use App\Http\Resources\V1\Package\PackageResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +27,8 @@ class AuthResource extends JsonResource {
             'balance' => $this->balance,
             'roles' => $this->roles()->pluck('name')->toArray(),
             'permissions' => $this->getPermissionsViaRoles()->pluck('name')->toArray(),
-            'package' => $this->package,
+            'package' => new PackageResource($this->package),
+            'books' => new BookResourceCollection($this->books),
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
         ];
