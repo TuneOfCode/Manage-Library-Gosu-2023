@@ -148,6 +148,10 @@ class MessageConstant {
     public static string $CANCEL_BOOKS_FAILED = "Cancel books failed!";
     public static string $PAY_BOOKS_SUCCESS = "Pay books success!";
     public static string $PAY_BOOKS_FAILED = "Pay books failed!";
+    public static string $MEMBER_NOT_ENOUGH_SCORE = "Member is not enough score";
+    public static string $MEMBER_NOT_VIP = "Package of member is not vip";
+    public static string $BOOK_NOT_ENOUGH_QUANTITY = "Book is not enough quantity";
+    public static string $MEMBER_BORROWING_BOOKS_LIMIT = "Member is borrowing books limit";
     public static string $DELETE_BOOK_USER_SUCCESS = "Delete history rent books success!";
     public static string $DELETE_BOOK_USER_FAILED = "Delete history rent books failed!";
     #endregion

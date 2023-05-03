@@ -2,17 +2,24 @@
 
 namespace App\Services\BookUser;
 
+use App\Constants\GlobalConstant;
 use App\Constants\MessageConstant;
+use App\Enums\BookLabel;
+use App\Enums\PackageType;
 use App\Http\Filters\V1\BookUser\BookUserFilter;
 use App\Http\Responses\BaseHTTPResponse;
+use App\Repositories\Book\IBookRepository;
 use App\Repositories\BookUser\IBookUserRepository;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BookUserService implements IBookUserService {
     /**
      * Đối tượng repository
      */
     private static IBookUserRepository $bookUserRepo;
+    private static IBookRepository $bookRepo;
     /**
      * Đối tượng lọc dữ liệu
      */
@@ -20,8 +27,12 @@ class BookUserService implements IBookUserService {
     /**
      * Hàm khởi tạo
      */
-    public function __construct(IBookUserRepository $bookUserRepo) {
+    public function __construct(
+        IBookUserRepository $bookUserRepo,
+        IBookRepository $bookRepo
+    ) {
         self::$bookUserRepo = $bookUserRepo;
+        self::$bookRepo = $bookRepo;
         self::$filter = new BookUserFilter();
     }
     /**
@@ -67,6 +78,34 @@ class BookUserService implements IBookUserService {
         return $result;
     }
     /**
+     * Xử lý đầu vào chuỗi sang mảng
+     */
+    private static function convertStringToArray(string $str) {
+        $array = explode(',', $str);
+        foreach ($array as $key => $value) {
+            $array[$key] = trim($value);
+        }
+        return $array;
+    }
+    /**
+     * Chính sách giảm giá cho từng gói
+     */
+    private static function getDiscountByPackageType(string $packageType) {
+        $brozen = strtolower(PackageType::BROZEN()->value);
+        $silver = strtolower(PackageType::SILVER()->value);
+        $gold = strtolower(PackageType::GOLD()->value);
+        switch ($packageType) {
+            case $brozen:
+                return 5 / 100; // giảm 5%
+            case $silver:
+                return 10 / 100; // giảm 10%
+            case $gold:
+                return 15 / 100; // giảm 15%
+            default:
+                return 0;
+        }
+    }
+    /**
      * Dịch vụ cho mượn sách
      */
     public static function borrowBooks(Request $request) {
@@ -75,13 +114,112 @@ class BookUserService implements IBookUserService {
         //  + userId: id của thành viên hiện tại Auth::user()->id
         //  + bookIds: id của nhiều sách
         //  + estimatedReturnDate: ngày dự kiến trả sách (hệ thống gợi ý)
+        $bookIds = self::convertStringToArray($request->get('bookIds'));
+
+        // lấy ra số lượng sách mà thành viên muốn mượn
+        $statisticsBooks = [];
+        foreach ($bookIds as $bookId) {
+            if (isset($statisticsBooks[$bookId])) {
+                $statisticsBooks[$bookId] = [
+                    'id' => $bookId,
+                    'amount' => $statisticsBooks[$bookId]['amount'] + 1
+                ];
+            } else {
+                $statisticsBooks[$bookId] = [
+                    'id' => $bookId,
+                    'amount' => 1
+                ];
+            }
+        }
+
+        $bookIds = array_unique($bookIds, SORT_NUMERIC);
+
+        // xử lý đầu vào ngày dự kiến trả sách
+        $date = $request->get('estimatedReturnedAt')
+            ? Carbon::createFromFormat(
+                'd/m/Y',
+                $request->get('estimatedReturnedAt')
+            )
+            : now()->addWeek();
+        $estimatedReturnDate = $date->format(GlobalConstant::$FORMAT_DATETIME_DB);
+        $currentMember = Auth::user();
+
         // kiểm tra điểm uy tín của thành viên (< 50 thì không cho mượn)
+        if ($currentMember->score < 50) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_ENOUGH_SCORE,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
+        $packageType = $currentMember->package()->first()->type;
+        $isBookVip = false;
+        $isNormalPackage = $packageType === strtolower(PackageType::NORMAL()->value);
+        // lấy ra thông tin chi tiết và kiếm tra từng sách mà thành viên muốn mượn
+        foreach ($bookIds as $bookId) {
+            $book = self::$bookRepo->findById($bookId);
+            if (empty($book) || !$book->status) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            // kiểm tra số lượng tồn kho của sách mà thành viên đang muốn mượn
+            $amount = $statisticsBooks[$bookId]['amount'];
+            if ($book->quantity < $amount) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_NOT_ENOUGH_QUANTITY,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            // kiểm tra sách có phải là sách vip hay không
+            if ($book->label === strtolower(BookLabel::VIP()->value)) {
+                $isBookVip = true;
+            }
+        }
+
         // kiểm tra gói dịch vụ hiện tại mà thành viên đang đăng ký
-        // kiểm tra số lượng tồn kho của sách mà thành viên đang muốn mượn
+        if ($isBookVip && $isNormalPackage) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_VIP,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
         // kiểm tra số lượng sách mà thành viên đang mượn (không vượt quá 5 cuốn)
+        $countBorrowingBooks = self::$bookUserRepo->countBorrowedBooks(
+            $currentMember->id
+        );
+        if ($countBorrowingBooks >= 5) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_BORROWING_BOOKS_LIMIT,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
         // thêm vào lịch sử cho thuê sách ở trạng thái đang chờ duyệt
+        foreach ($bookIds as $bookId) {
+            $book = self::$bookRepo->findById($bookId);
+            $amount = $statisticsBooks[$bookId]['amount'];
+            $payment = $amount * $book->loan_price;
+            $discount = self::getDiscountByPackageType(
+                $packageType
+            );
+            $currentMember->books()->attach($bookId, [
+                'amount' => $amount,
+                'payment' => $payment,
+                'discount' => $discount,
+                'estimated_returned_at' => $estimatedReturnDate
+            ]);
+        }
+
         // trả lại kết quả
-        return [];
+        $result = self::$bookUserRepo->findOne([
+            'user_id' => $currentMember->id,
+        ], ['user', 'book']);
+        return $result;
     }
     /**
      * Dịch vụ phê duyệt cho mượn sách
@@ -135,6 +273,8 @@ class BookUserService implements IBookUserService {
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ nhận sách
         // thay đổi trạng thái của các bản ghi thuê sách thành đang mượn
         // bật thực hiện công việc thông báo trước 1-2 ngày trước khi hết hạn trả sách qua hình thức gửi email
+        // // trừ đi số lượng tồn kho của sách
+        // $book->quantity -= $amount;
         // trả lại kết quả
         return [];
     }

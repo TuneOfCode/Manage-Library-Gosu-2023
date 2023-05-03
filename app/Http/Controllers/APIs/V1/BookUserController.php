@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\BookUser\BookUserResource;
 use App\Http\Resources\V1\BookUser\BookUserResourceCollection;
 use App\Http\Responses\BaseResponse;
+use App\Repositories\Book\BookRepository;
 use App\Repositories\BookUser\BookUserRepository;
 use App\Services\BookUser\BookUserService;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class BookUserController extends Controller {
      * Hàm khởi tạo 
      */
     public function __construct() {
-        new BookUserService(new BookUserRepository());
+        new BookUserService(
+            new BookUserRepository(),
+            new BookRepository()
+        );
     }
     /**
      * Display a listing of the resource.
@@ -52,7 +56,9 @@ class BookUserController extends Controller {
     public function store(Request $request) {
         Log::info('***** Mượn nhiều sách *****');
         try {
-            $data = BookUserService::borrowBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::borrowBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,

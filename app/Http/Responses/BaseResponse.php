@@ -21,29 +21,7 @@ trait BaseResponse {
         $statusCode = 200,
         $messageCode = "OK"
     ): JsonResponse {
-        if (
-            $data instanceof LengthAwarePaginator
-            || $data instanceof ResourceCollection
-        ) {
-            return response()->json([
-                'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
-                'statusCode' => $statusCode,
-                'message' => $message,
-                'data' => $data->items(),
-                'meta' => [
-                    'currentPage' => $data->currentPage(), // Trang hiện tại
-                    'perPage' => $data->perPage(), // Số bản ghi trên 1 trang
-                    'totalPages' => $data->lastPage(), // Tổng số trang
-                    'totalRows' => $data->total(), // Tổng số bản ghi
-                    'from' => $data->firstItem(), // Bản ghi đầu tiên trên trang hiện tại
-                    'to' => $data->lastItem() // Bản ghi cuối cùng trên trang hiện tại
-                ],
-                'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
-                'path' => $request->getRequestUri()
-            ], $statusCode);
-        }
-
-        return response()->json([
+        $result = [
             'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
             'statusCode' => $statusCode,
             'message' => $message,
@@ -51,7 +29,35 @@ trait BaseResponse {
             'meta' => empty($data['meta']) ? null : $data['meta'],
             'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
-        ], $statusCode);
+        ];
+
+        if (
+            $data instanceof LengthAwarePaginator
+            || $data instanceof ResourceCollection
+        ) {
+            try {
+                return response()->json([
+                    'status' => BaseHTTPResponse::$HTTP[$statusCode] ?? $messageCode,
+                    'statusCode' => $statusCode,
+                    'message' => $message,
+                    'data' => $data->items(),
+                    'meta' => [
+                        'currentPage' => $data->currentPage(), // Trang hiện tại
+                        'perPage' => $data->perPage(), // Số bản ghi trên 1 trang
+                        'totalPages' => $data->lastPage(), // Tổng số trang
+                        'totalRows' => $data->total(), // Tổng số bản ghi
+                        'from' => $data->firstItem(), // Bản ghi đầu tiên trên trang hiện tại
+                        'to' => $data->lastItem() // Bản ghi cuối cùng trên trang hiện tại
+                    ],
+                    'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
+                    'path' => $request->getRequestUri()
+                ], $statusCode);
+            } catch (\Throwable $th) {
+                return response()->json($result, $statusCode);
+            }
+        }
+
+        return response()->json($result, $statusCode);
     }
     /**
      * Hàm định nghĩa cấu trúc trả về của API khi ở trạng thái thất bại
