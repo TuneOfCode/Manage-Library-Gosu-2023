@@ -126,8 +126,8 @@ class UserSeeder extends Seeder {
             "name" => PermissionConstant::$CANCEL_BOOK,
             "guard_name" => GlobalConstant::$GUARD_API
         ]);
-        $RETURN_BOOK = Permission::create([
-            "name" => PermissionConstant::$RETURN_BOOK,
+        $CONFIRM_RETURNED_BOOK = Permission::create([
+            "name" => PermissionConstant::$CONFIRM_RETURNED_BOOK,
             "guard_name" => GlobalConstant::$GUARD_API
         ]);
         $APPROVE_BOOK = Permission::create([
@@ -140,6 +140,10 @@ class UserSeeder extends Seeder {
         ]);
         $PAY_MONEY = Permission::create([
             "name" => PermissionConstant::$PAY_MONEY,
+            "guard_name" => GlobalConstant::$GUARD_API,
+        ]);
+        $CONFIRM_RECEIVED_BOOK = Permission::create([
+            "name" => PermissionConstant::$CONFIRM_RECEIVED_BOOK,
             "guard_name" => GlobalConstant::$GUARD_API,
         ]);
         $READ_STATISTIC = Permission::create([
@@ -201,6 +205,8 @@ class UserSeeder extends Seeder {
             $DELETE_BOOK,
             $APPROVE_BOOK,
             $REJECT_BOOK,
+            $CONFIRM_RECEIVED_BOOK,
+            $CONFIRM_RETURNED_BOOK,
             // statistics
             $READ_STATISTIC,
             $CREATE_STATISTIC,
@@ -240,7 +246,6 @@ class UserSeeder extends Seeder {
             $READ_A_BOOK,
             $BORROW_BOOK,
             $CANCEL_BOOK,
-            $RETURN_BOOK,
             $PAY_MONEY
         ];
 

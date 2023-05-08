@@ -30,7 +30,6 @@ trait BaseResponse {
             'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()
         ];
-
         if (
             $data instanceof LengthAwarePaginator
             || $data instanceof ResourceCollection

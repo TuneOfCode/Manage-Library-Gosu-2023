@@ -4,6 +4,8 @@ namespace App\Http\Controllers\APIs\V1;
 
 use App\Constants\MessageConstant;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\BookUser\BorrowBooksRequest;
+use App\Http\Requests\V1\BookUser\UpdateBookUserRequest;
 use App\Http\Resources\V1\BookUser\BookUserResource;
 use App\Http\Resources\V1\BookUser\BookUserResourceCollection;
 use App\Http\Responses\BaseResponse;
@@ -53,7 +55,7 @@ class BookUserController extends Controller {
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(BorrowBooksRequest $request) {
         Log::info('***** Mượn nhiều sách *****');
         try {
             $data = new BookUserResourceCollection(
@@ -99,10 +101,12 @@ class BookUserController extends Controller {
     /**
      * Điều hướng duyệt mượn sách
      */
-    public function approve(Request $request) {
+    public function approve(UpdateBookUserRequest $request) {
         Log::info('***** Duyệt mượn sách *****');
         try {
-            $data = BookUserService::approveBorrowingBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::approveBorrowingBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -120,10 +124,12 @@ class BookUserController extends Controller {
     /**
      * Điều hướng từ chối mượn sách
      */
-    public function reject(Request $request) {
+    public function reject(UpdateBookUserRequest $request) {
         Log::info('***** Từ chối mượn sách *****');
         try {
-            $data = BookUserService::rejectBorrowingBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::rejectBorrowingBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -141,10 +147,12 @@ class BookUserController extends Controller {
     /**
      * Điều hướng hủy yêu cầu mượn sách
      */
-    public function cancel(Request $request) {
+    public function cancel(UpdateBookUserRequest $request) {
         Log::info('***** Hủy yêu cầu mượn sách *****');
         try {
-            $data = BookUserService::cancelBorrowingBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::cancelBorrowingBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -162,10 +170,12 @@ class BookUserController extends Controller {
     /**
      * Điều hướng thanh toán tiền mượn sách
      */
-    public function pay(Request $request) {
+    public function pay(UpdateBookUserRequest $request) {
         Log::info('***** Thanh toán tiền mượn sách *****');
         try {
-            $data = BookUserService::payBorrowingBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::payBorrowingBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -181,12 +191,37 @@ class BookUserController extends Controller {
     }
 
     /**
+     * Điều hướng xác nhận thành viên đã nhận được sách
+     */
+    public function confirmReceived(UpdateBookUserRequest $request) {
+        Log::info('***** Xác nhận thành viên đã nhận được sách *****');
+        try {
+            $data = new BookUserResourceCollection(
+                BookUserService::confirmReceivingBooks($request)
+            );
+            return $this->success(
+                $request,
+                $data,
+                MessageConstant::$CONFIRM_RECEIVED_BOOKS_SUCCESS
+            );
+        } catch (\Throwable $th) {
+            return $this->error(
+                $request,
+                $th,
+                MessageConstant::$CONFIRM_RECEIVED_BOOKS_FAILED
+            );
+        }
+    }
+
+    /**
      * Điều hướng trả sách
      */
-    public function return(Request $request) {
+    public function confirmReturned(UpdateBookUserRequest $request) {
         Log::info('***** Trả sách *****');
         try {
-            $data = BookUserService::returnBooks($request);
+            $data = new BookUserResourceCollection(
+                BookUserService::returnBooks($request)
+            );
             return $this->success(
                 $request,
                 $data,
@@ -202,9 +237,32 @@ class BookUserController extends Controller {
     }
 
     /**
+     * Điều hướng về thanh toán phụ phí
+     */
+    public function payExtraMoney(UpdateBookUserRequest $request) {
+        Log::info('***** Thanh toán phụ phí *****');
+        try {
+            $data = new BookUserResourceCollection(
+                BookUserService::payExtraMoney($request)
+            );
+            return $this->success(
+                $request,
+                $data,
+                MessageConstant::$PAY_EXTRA_MONEY_SUCCESS
+            );
+        } catch (\Throwable $th) {
+            return $this->error(
+                $request,
+                $th,
+                MessageConstant::$PAY_EXTRA_MONEY_FAILED
+            );
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request) {
+    public function destroy(UpdateBookUserRequest $request) {
         Log::info('***** Xóa lịch sử thuê sách *****');
         try {
             BookUserService::deleteBookUser($request);

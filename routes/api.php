@@ -217,26 +217,34 @@ Route::group([
             BookUserController::class,
             'store'
         ])->middleware('permission:' . PermissionConstant::$BORROW_BOOK);
-        Route::post('/approve', [
+        Route::patch('/approve', [
             BookUserController::class,
             'approve'
         ])->middleware('permission:' . PermissionConstant::$APPROVE_BOOK);
-        Route::delete('/reject', [
+        Route::patch('/reject', [
             BookUserController::class,
             'reject'
         ])->middleware('permission:' . PermissionConstant::$REJECT_BOOK);
-        Route::delete('/cancel', [
+        Route::patch('/cancel', [
             BookUserController::class,
             'cancel'
         ])->middleware('permission:' . PermissionConstant::$CANCEL_BOOK);
-        Route::delete('/pay', [
+        Route::patch('/pay', [
             BookUserController::class,
             'pay'
         ])->middleware('permission:' . PermissionConstant::$PAY_MONEY);
-        Route::delete('/return', [
+        Route::patch('/confirm-received', [
             BookUserController::class,
-            'return'
-        ])->middleware('permission:' . PermissionConstant::$RETURN_BOOK);
+            'confirmReceived'
+        ])->middleware('permission:' . PermissionConstant::$CONFIRM_RECEIVED_BOOK);
+        Route::patch('/confirm-returned', [
+            BookUserController::class,
+            'confirmReturned'
+        ])->middleware('permission:' . PermissionConstant::$CONFIRM_RETURNED_BOOK);
+        Route::patch('/pay-extra-money', [
+            BookUserController::class,
+            'payExtraMoney'
+        ])->middleware('permission:' . PermissionConstant::$PAY_MONEY);
         Route::delete('/', [
             BookUserController::class,
             'destroy'

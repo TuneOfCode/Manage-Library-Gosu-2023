@@ -29,6 +29,25 @@ class BookResource extends JsonResource {
             'publishedAt' => $this->published_at,
             'category' => new CategoryResource($this->whenLoaded('category')),
             'members' => new UserResourceCollection($this->whenLoaded('users')),
+            'privot' => $this->whenPivotLoaded('book_user', function () {
+                return [
+                    'amount' => $this->pivot->amount,
+                    'payment' => $this->pivot->payment,
+                    'discount' => $this->pivot->discount,
+                    'unit' => $this->pivot->unit,
+                    'extraMoney' => $this->pivot->extra_money,
+                    'status' => $this->pivot->status,
+                    'approvedAt' => $this->pivot->approved_at,
+                    'rejectedAt' => $this->pivot->rejected_at,
+                    'canceledAt' => $this->pivot->canceled_at,
+                    'paidAt' => $this->pivot->paid_at,
+                    'borrowedAt' => $this->pivot->borrowed_at,
+                    'estimatedReturnedAt' => $this->pivot->estimated_returned_at,
+                    'returnedAt' => $this->pivot->returned_at,
+                    'extraMoneyAt' => $this->pivot->extra_money_at,
+                    'note' => $this->pivot->note,
+                ];
+            }),
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
         ];

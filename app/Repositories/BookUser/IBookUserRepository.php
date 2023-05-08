@@ -10,4 +10,10 @@ interface IBookUserRepository extends IBaseRepository {
      * với trạng thái đang mượn sách
      */
     public function countBorrowedBooks($userId);
+    /**
+     * Lấy ra số lượng lịch sử thuê sách với trạng thái hiện tại:
+     * + sách trả quá hạn
+     * + không trả sách
+     */
+    public function getAllHistoryWithOverdueAndNotReturn(string $id, string $userId);
 }

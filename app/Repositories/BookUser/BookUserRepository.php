@@ -5,6 +5,7 @@ namespace App\Repositories\BookUser;
 use App\Enums\RentBookStatus;
 use App\Models\BookUser;
 use App\Repositories\BaseRepository;
+use Illuminate\Support\Facades\DB;
 
 class BookUserRepository extends BaseRepository implements IBookUserRepository {
     /**
@@ -22,5 +23,34 @@ class BookUserRepository extends BaseRepository implements IBookUserRepository {
             ['user_id', '=', $userId],
             ['status', '=', strtolower(RentBookStatus::BORROWING()->value)]
         ])->count();
+    }
+    /**
+     * Lấy ra số lượng lịch sử thuê sách với trạng thái hiện tại:
+     * + sách trả quá hạn
+     * + không trả sách
+     */
+    public function getAllHistoryWithOverdueAndNotReturn(string $id, string $userId) {
+        return $this->_model
+            ->where(
+                [
+                    ['id', '=', $id],
+                    ['user_id', '=', $userId],
+                    ['status', '=', str_replace(
+                        '_',
+                        ' ',
+                        strtolower(RentBookStatus::OVERDUE_RETURNED()->value)
+                    )]
+                ],
+            )
+            ->orWhere([
+                ['id', '=', $id],
+                ['user_id', '=', $userId],
+                ['status', '=', str_replace(
+                    '_',
+                    ' ',
+                    strtolower(RentBookStatus::NOT_RETURNED()->value)
+                )]
+            ],)
+            ->get();
     }
 }

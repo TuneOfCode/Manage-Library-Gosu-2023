@@ -44,11 +44,19 @@ interface IBookUserService {
     /**
      * Dịch vụ kiểm tra sách trả có quá hạn không
      */
-    public static function checkOverdueBooks(Request $request);
+    public static function checkOverdueBooks();
+    /**
+     * Dịch vụ tăng tiền phụ phí
+     */
+    public static function increaseExtraMoney();
     /**
      * Dịch vụ kiểm tra không trả sách
      */
-    public static function checkNotReturnBooks(Request $request);
+    public static function checkNotReturnBooks();
+    /**
+     * Dịch vụ trả tiền phụ phí (trễ hạn hoặc không trả sách)
+     */
+    public static function payExtraMoney(Request $request);
     /**
      * Dịch vụ xoá thuê sách
      */

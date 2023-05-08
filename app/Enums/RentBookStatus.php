@@ -6,6 +6,7 @@ use Spatie\Enum\Enum;
 
 /**
  * @method static self PENDING()
+ * @method static self REJECTED()
  * @method static self PAYING()
  * @method static self RECEIVING()
  * @method static self BORROWING()
@@ -13,7 +14,6 @@ use Spatie\Enum\Enum;
  * @method static self OVERDUE_RETURNED()
  * @method static self NOT_RETURNED()
  * @method static self CANCEL()
- * @method static self REFUSED()
  */
 class RentBookStatus extends Enum {
     const MAP_VALUE = [

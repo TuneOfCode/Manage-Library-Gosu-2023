@@ -6,6 +6,7 @@ use App\Constants\GlobalConstant;
 use App\Constants\MessageConstant;
 use App\Enums\BookLabel;
 use App\Enums\PackageType;
+use App\Enums\RentBookStatus;
 use App\Http\Filters\V1\BookUser\BookUserFilter;
 use App\Http\Responses\BaseHTTPResponse;
 use App\Repositories\Book\IBookRepository;
@@ -109,11 +110,11 @@ class BookUserService implements IBookUserService {
      * Dịch vụ cho mượn sách
      */
     public static function borrowBooks(Request $request) {
-        //* DOING: xử lý logic cho mượn sách
+        //* DONE: xử lý logic cho mượn sách
         // - dữ liệu đầu vào của mượn sách bao gồm:
         //  + userId: id của thành viên hiện tại Auth::user()->id
         //  + bookIds: id của nhiều sách
-        //  + estimatedReturnDate: ngày dự kiến trả sách (hệ thống gợi ý)
+        //  + estimatedReturnedAt: ngày dự kiến trả sách (hệ thống gợi ý)
         $bookIds = self::convertStringToArray($request->get('bookIds'));
 
         // lấy ra số lượng sách mà thành viên muốn mượn
@@ -225,119 +226,495 @@ class BookUserService implements IBookUserService {
      * Dịch vụ phê duyệt cho mượn sách
      */
     public static function approveBorrowingBooks(Request $request) {
-        // TODO: xử lý logic phê duyệt cho mượn sách
+        //* DONE: xử lý logic phê duyệt cho mượn sách
         // - dữ liệu đầu vào của phê duyệt cho mượn sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ duyệt
-        // thay đổi trạng thái của các bản ghi thuê sách thành đang chờ nhận sách
+        foreach ($ids as $id) {
+            $bookUser = self::$bookUserRepo->findById($id);
+            if (empty($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            $pendingStatus = strtolower(RentBookStatus::PENDING()->value);
+            if ($bookUser->status !== $pendingStatus) {
+                throw new \Exception(
+                    MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
+
+        // thay đổi trạng thái của các bản ghi thuê sách thành đã duyệt và đang chờ thanh toán
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::PAYING()->value);
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'approved_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+            $result[] = self::$bookUserRepo->findById($id);
+        }
+
         // trả lại kết quả
-        return [];
+        return $result;
     }
     /**
      * Dịch vụ từ chối yêu cầu mượn sách
      */
     public static function rejectBorrowingBooks(Request $request) {
-        // TODO: xử lý logic từ chối yêu cầu mượn sách
+        //* DONE: xử lý logic từ chối yêu cầu mượn sách
         // - điều kiện để từ chối yêu cầu mượn sách:
         //  + nếu trong kho sách không còn đủ sách để cho mượn
         //  + nếu thành viên không trả sách ở lần mượn trước đó
         //  + nếu thành viên trả sách quá hạn quá nhiều lần (>= 3 lần)
         // - dữ liệu đầu vào của phê duyệt cho mượn sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ duyệt
+        foreach ($ids as $id) {
+            $bookUser = self::$bookUserRepo->findById($id);
+            if (empty($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            $pendingStatus = strtolower(RentBookStatus::PENDING()->value);
+            if ($bookUser->status !== $pendingStatus) {
+                throw new \Exception(
+                    MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
+
         // thay đổi trạng thái của các bản ghi thuê sách thành đã từ chối
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::REJECTED()->value);
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'rejected_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+            $result[] = self::$bookUserRepo->findById($id);
+        }
         // trả lại kết quả (có thể xoá các bản ghi thuê sách này)
-        return [];
+        return $result;
     }
     /**
      * Dịch vụ trả tiền thuê sách
      */
     public static function payBorrowingBooks(Request $request) {
-        // TODO: xử lý logic trả tiền thuê sách
+        // *DONE: xử lý logic trả tiền thuê sách
         // - dữ liệu đầu vào của trả tiền thuê sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ thanh toán
+        $currentMember = Auth::user();
+        $intoMoney = 0;
+        foreach ($ids as $id) {
+            $payingStatus = strtolower(RentBookStatus::PAYING()->value);
+            $bookUser = self::$bookUserRepo->findOne([
+                'id' => $id,
+                'user_id' => $currentMember->id, // chỉ cho phép thanh toán của thành viên hiện tại
+                'status' => $payingStatus
+            ])->toArray();
+            if (empty($bookUser) || count($ids) !== count($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST
+                        . " or " .
+                        MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            foreach ($bookUser as $item) {
+                $intoMoney += $item['payment']
+                    - ($item['payment'] * $item['discount'] / 100);
+            }
+        }
+
         // kiểm tra số dư tài khoản của thành viên
-        // tiến hành tính và trừ tiền của thành viên
+        if ($currentMember->balance < $intoMoney) {
+            throw new \Exception(
+                MessageConstant::$MEMBER_NOT_ENOUGH_BALANCE,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
+
+        // tiến hành tính, trừ tiền và cập nhật của thành viên
+        $currentMember->balance -= $intoMoney;
+        $currentMember->save();
+
         // thay đổi trạng thái của các bản ghi thuê sách thành đã thanh toán
-        // trả lại kết quả
-        return [];
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::RECEIVING()->value);
+            $bookUser = self::$bookUserRepo->findById($id);
+            $book = self::$bookRepo->findById($bookUser['book_id']);
+            $positision = $book['position'];
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'paid_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB),
+                'note' => "Please go to $positision to receive books"
+            ], $id);
+            $result[] = self::$bookUserRepo->findById($id);
+        }
+        // trả lại kết quả 
+        return $result;
     }
     /**
      * Dịch vụ xác nhận nhận sách
      */
     public static function confirmReceivingBooks(Request $request) {
-        // TODO: xử lý logic xác nhận nhận sách
+        // *DONE: xử lý logic xác nhận nhận sách
         // - dữ liệu đầu vào của xác nhận nhận sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ nhận sách
+        foreach ($ids as $id) {
+            $bookUser = self::$bookUserRepo->findById($id);
+            if (empty($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            $pendingStatus = strtolower(RentBookStatus::RECEIVING()->value);
+            if ($bookUser->status !== $pendingStatus) {
+                throw new \Exception(
+                    MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
         // thay đổi trạng thái của các bản ghi thuê sách thành đang mượn
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::BORROWING()->value);
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'borrowed_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+            $bookUser = self::$bookUserRepo->findById($id);
+            $result[] =  $bookUser;
+
+            // trừ đi số lượng tồn kho của sách
+            $book = self::$bookRepo->findById($bookUser['book_id']);
+            $newQuantity = $book['quantity'] - $bookUser['amount'];
+            self::$bookRepo->update([
+                'quantity' => $newQuantity
+            ], $bookUser['book_id']);
+        }
         // bật thực hiện công việc thông báo trước 1-2 ngày trước khi hết hạn trả sách qua hình thức gửi email
-        // // trừ đi số lượng tồn kho của sách
-        // $book->quantity -= $amount;
-        // trả lại kết quả
-        return [];
+        // trả lại kết quả 
+        return $result;
     }
     /**
      * Dich vụ hủy yêu cầu mượn sách
      */
     public static function cancelBorrowingBooks(Request $request) {
-        // TODO: xử lý logic hủy yêu cầu mượn sách
+        // * DONE: xử lý logic hủy yêu cầu mượn sách
         // - dữ liệu đầu vào của hủy yêu cầu mượn sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang chờ duyệt
+        $currentMember = Auth::user();
+        foreach ($ids as $id) {
+            $pendingStatus = strtolower(RentBookStatus::PENDING()->value);
+            $bookUser = self::$bookUserRepo->findOne([
+                'id' => $id,
+                'user_id' => $currentMember->id,
+                'status' => $pendingStatus
+            ])->toArray();
+            if (empty($bookUser) || count($ids) !== count($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST
+                        . " or " .
+                        MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
         // thay đổi trạng thái của các bản ghi thuê sách thành đã hủy
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::CANCEL()->value);
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'canceled_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+            $result[] = self::$bookUserRepo->findById($id);
+        }
         // trả lại kết quả (có thể xoá các bản ghi thuê sách này)
-        return [];
+        return $result;
     }
     /**
      * Dịch vụ trả sách
      */
     public static function returnBooks(Request $request) {
-        // TODO: xử lý logic trả sách
+        // * DONE: xử lý logic trả sách
         // - dữ liệu đầu vào của trả sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang mượn
+        foreach ($ids as $id) {
+            $bookUser = self::$bookUserRepo->findById($id);
+            if (empty($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            $pendingStatus = strtolower(RentBookStatus::BORROWING()->value);
+            if ($bookUser->status !== $pendingStatus) {
+                throw new \Exception(
+                    MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
         // thay đổi trạng thái của các bản ghi thuê sách thành đã trả
+        $result = [];
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::RETURNED()->value);
+            self::$bookUserRepo->update([
+                'status' => $newStatus,
+                'returned_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+            $result[] = self::$bookUserRepo->findById($id);
+        }
         // trả lại kết quả
-        return [];
+        return $result;
     }
     /**
      * Dịch vụ kiểm tra sách trả có quá hạn không
      */
-    public static function checkOverdueBooks(Request $request) {
-        // TODO: xử lý logic kiểm tra sách trả có quá hạn không
-        // - dữ liệu đầu vào của kiểm tra sách trả có quá hạn không bao gồm:
-        //  + ids của các bản ghi thuê sách
-        // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang mượn
+    public static function checkOverdueBooks() {
+        // *DONE: xử lý logic kiểm tra sách trả có quá hạn không
+        // lấy ra các bản ghi thuê sách có trạng thái là đang mượn
+        $borrowingBooks = self::$bookUserRepo->findAll([
+            'status' => strtolower(RentBookStatus::BORROWING()->value)
+        ]);
+
         // kiểm tra thời gian trả sách có quá hạn không
-        // tự động cập nhật trạng thái của các bản ghi thuê sách thành đã trả quá hạn
-        // trả lại kết quả
+        foreach ($borrowingBooks as $borrowingBook) {
+            if ($borrowingBook['estimated_returned_at'] < now()) {
+                // nếu trễ hạn mỗi ngày thì phụ phí tăng thêm 5.000 vnđ
+                $dueDate = Carbon::createFromFormat(
+                    GlobalConstant::$FORMAT_DATETIME_DB,
+                    $borrowingBook['estimated_returned_at']
+                )->diffInDays(now());
+                $extraMoney = $dueDate * 5000;
+
+                // tự động cập nhật trạng thái của các bản ghi thuê sách thành đã trả quá hạn
+                $newStatus = str_replace(
+                    '_',
+                    ' ',
+                    strtolower(RentBookStatus::OVERDUE_RETURNED()->value)
+                );
+                self::$bookUserRepo->update([
+                    'status' => $newStatus,
+                    'extra_money' => $extraMoney,
+                ], $borrowingBook['id']);
+            }
+        }
+    }
+    /**
+     * Dịch vụ tăng tiền phụ phí
+     */
+    public static function increaseExtraMoney() {
+        // *DONE: xử lý logic tăng tiền phụ phí
+        // lấy ra các bản ghi thuê sách có trạng thái là sách trả quá hạn
+        $overdueReturnedBooks = self::$bookUserRepo->findAll([
+            'status' =>
+            str_replace(
+                '_',
+                ' ',
+                strtolower(RentBookStatus::OVERDUE_RETURNED()->value)
+            )
+        ]);
+        foreach ($overdueReturnedBooks as $overdueReturnedBook) {
+            if ($overdueReturnedBook['estimated_returned_at'] < now()) {
+                // nếu trễ hạn mỗi ngày thì phụ phí tăng thêm 5.000 vnđ
+                $dueDate = Carbon::createFromFormat(
+                    GlobalConstant::$FORMAT_DATETIME_DB,
+                    $overdueReturnedBook['estimated_returned_at']
+                )->diffInDays(now());
+                $extraMoney = $dueDate * 5000;
+
+                // tự động cập nhật tiền phụ phí
+                self::$bookUserRepo->update([
+                    'extra_money' => $extraMoney,
+                ], $overdueReturnedBook['id']);
+            }
+        }
     }
     /**
      * Dịch vụ kiểm tra không trả sách
      */
-    public static function checkNotReturnBooks(Request $request) {
-        // TODO: xử lý logic kiểm tra không trả sách
-        // - dữ liệu đầu vào của kiểm tra không trả sách bao gồm:
+    public static function checkNotReturnBooks() {
+        // *DONE: xử lý logic kiểm tra không trả sách
+        // lấy ra các bản ghi thuê sách có trạng thái là đang mượn
+        $borrowingBooks = self::$bookUserRepo->findAll([
+            'status' => strtolower(RentBookStatus::BORROWING()->value)
+        ]);
+
+        // kiểm tra thời gian trả sách có quá hạn sau 2 tuần kể từ thời hạn dự kiến trả sách
+        foreach ($borrowingBooks as $borrowingBook) {
+            $estimatedReturnDate = Carbon::createFromFormat(
+                GlobalConstant::$FORMAT_DATETIME_DB,
+                $borrowingBook['estimated_returned_at']
+            );
+            $estimatedReturnDate->addWeeks(2);
+            if ($estimatedReturnDate < now()) {
+                // tự động cập nhật trạng thái của các bản ghi thuê sách thành không trả sách
+                $newStatus =
+                    str_replace(
+                        '_',
+                        ' ',
+                        strtolower(RentBookStatus::NOT_RETURNED()->value)
+                    );
+                self::$bookUserRepo->update([
+                    'status' => $newStatus
+                ], $borrowingBook['id']);
+            }
+        }
+    }
+    /**
+     * Dịch vụ trả tiền phụ phí (trễ hạn hoặc không trả sách)
+     */
+    public static function payExtraMoney(Request $request) {
+        // !!check: xử lý logic trả tiền phụ phí (trễ hạn hoặc không trả sách)
+        // - dữ liệu đầu vào của trả tiền phụ phí (trễ hạn hoặc không trả sách) bao gồm:
         //  + ids của các bản ghi thuê sách
-        // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là đang mượn
-        // kiểm tra thời gian trả sách có quá hạn không
-        // tự động cập nhật trạng thái của các bản ghi thuê sách thành không trả sách
-        //  sau 1-2 tuần kể từ ngày hết hạn trả sách
+        $currentMember = Auth::user();
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
+        // kiểm tra trạng thái hiện tại của các bản ghi thuê sách của thành viên hiện tại phải là:
+        //  + đã trả quá hạn
+        //  + không trả sách
+        $totalExtraMoney = 0;
+        $result = [];
+        foreach ($ids as $id) {
+            $histories = self::$bookUserRepo->getAllHistoryWithOverdueAndNotReturn(
+                $id,
+                $currentMember->id,
+            )->toArray();
+            if (empty($histories)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST
+                        . " or " .
+                        MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+            $totalExtraMoney = 0;
+            foreach ($histories as $history) {
+                $totalExtraMoney += $history["extra_money"];
+            }
+
+            // kiểm tra số dư tài khoản của thành viên
+            if ($currentMember->balance < $totalExtraMoney) {
+                throw new \Exception(
+                    MessageConstant::$MEMBER_NOT_ENOUGH_BALANCE,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            // thêm thời gian trả tiền phụ phí
+            self::$bookUserRepo->update([
+                'extra_money_at' => now()->format(GlobalConstant::$FORMAT_DATETIME_DB)
+            ], $id);
+
+            $result[] = self::$bookUserRepo->findById($id);
+        }
+
+        // tiến hành tính, trừ tiền và cập nhật của thành viên
+        $currentMember->balance -= $totalExtraMoney;
+        $currentMember->save();
+
         // trả lại kết quả
+        return $result;
     }
     /**
      * Dịch vụ xoá thuê sách
      */
     public static function deleteBookUser(Request $request) {
-        // TODO: xử lý logic xoá thuê sách
+        // * DONE: xử lý logic xoá thuê sách
         // - dữ liệu đầu vào của xoá thuê sách bao gồm:
         //  + ids của các bản ghi thuê sách
+        $ids = array_unique(
+            self::convertStringToArray($request->get('ids')),
+            SORT_NUMERIC
+        );
+
         // kiểm tra trạng thái hiện tại của các bản ghi thuê sách phải là:
         //  + bị từ chối
         //  + bị huỷ
+        foreach ($ids as $id) {
+            $bookUser = self::$bookUserRepo->findById($id);
+            if (empty($bookUser)) {
+                throw new \Exception(
+                    MessageConstant::$BOOK_USER_NOT_EXIST,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+
+            $cancelStatus = strtolower(RentBookStatus::CANCEL()->value);
+            $rejectStatus = strtolower(RentBookStatus::REJECTED()->value);
+            if (
+                $bookUser->status !== $cancelStatus
+                && $bookUser->status !== $rejectStatus
+            ) {
+                throw new \Exception(
+                    MessageConstant::$INVALD_STATUS,
+                    BaseHTTPResponse::$BAD_REQUEST
+                );
+            }
+        }
+
         // xoá các bản ghi thuê sách
+        foreach ($ids as $id) {
+            $newStatus = strtolower(RentBookStatus::RETURNED()->value);
+            self::$bookUserRepo->destroy($id);
+        }
+
         // trả lại kết quả
         return null;
     }
