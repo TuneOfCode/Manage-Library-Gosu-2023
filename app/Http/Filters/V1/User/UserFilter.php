@@ -14,11 +14,13 @@ class UserFilter extends BaseFilter {
         'phone' => ['eq', 'like'],
         'address' => ['eq', 'like'],
         'score' => ['eq', 'lt', 'lte', 'gt', 'gte', 'neq'],
+        'packageId' => ['eq', 'neq'],
     ];
     /**
      * Định nghĩa thuộc tính ánh xạ với các trường trong CSDL
      */
     protected $columnsMap = [
         'fullName' => 'full_name',
+        'packageId' => 'package_id',
     ];
 }

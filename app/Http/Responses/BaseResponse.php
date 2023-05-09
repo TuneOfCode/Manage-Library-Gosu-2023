@@ -89,8 +89,8 @@ trait BaseResponse {
                 'code' => $statusCode,
                 'message' => $message,
                 'content' => $content,
-                'file' => $error->getFile(),
-                'line' => $error->getLine(),
+                // 'file' => $error->getFile(),
+                // 'line' => $error->getLine(),
             ],
             'time' => Carbon::now()->format(GlobalConstant::$FORMAT_DATETIME),
             'path' => $request->getRequestUri()

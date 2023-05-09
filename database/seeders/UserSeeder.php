@@ -225,7 +225,7 @@ class UserSeeder extends Seeder {
             "otp_email_code" => "abc123",
             "otp_email_expired_at" => now()->addMinute(),
             "email_verified_at" => now(),
-            "package_id" => 1
+            "package_id" => 4
         ]);
         $admin->assignRole($roleAdmin)->givePermissionTo($adminPermissions);
         #endregion
@@ -252,6 +252,7 @@ class UserSeeder extends Seeder {
         // tạo tài khoản member
         $members = User::factory()
             ->count(14)
+            ->hasPackage(random_int(1, 4))
             ->create();
         $members->each(function ($member) use ($roleMember) {
             if (!$member->hasRole(RoleConstant::$ADMIN)) {
