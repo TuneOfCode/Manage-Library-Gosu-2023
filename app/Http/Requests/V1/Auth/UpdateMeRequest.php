@@ -20,7 +20,7 @@ class UpdateMeRequest extends FormRequest {
     public function rules(): array {
         return [
             'fullName' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . auth()->user()->id,
+            // 'email' => 'sometimes|string|email|max:255|unique:users,email,' . auth()->user()->id,
             'phone' => 'sometimes|string|max:255',
             'address' => 'sometimes|string|max:255'
         ];

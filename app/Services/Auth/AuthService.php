@@ -130,7 +130,7 @@ class AuthService implements IAuthService {
         $email = $sendOtpEmailData['email'];
         $user = self::$userRepo->findOne([
             'email' => $email,
-        ]);
+        ])->toArray();
 
         // kiểm tra thành viên có tồn tại
         if (empty($user)) {
@@ -385,25 +385,25 @@ class AuthService implements IAuthService {
         $user = Auth::user();
         $id = $user->id;
 
-        // kiểm tra email có tồn tại trong CSDL
-        if (!empty($updateMeData['email']) && isset($updateMeData['email'])) {
-            $user = self::$userRepo->findOne(['email' => $updateMeData['email']]);
-            if (!empty($user->email) && $user->id != $id) {
-                throw new \Exception(
-                    MessageConstant::$EMAIL_EXIST,
-                    BaseHTTPResponse::$BAD_REQUEST
-                );
-            }
-        }
+        // // kiểm tra email có tồn tại trong CSDL
+        // if (!empty($updateMeData['email']) && isset($updateMeData['email'])) {
+        //     $user = self::$userRepo->findOne(['email' => $updateMeData['email']]);
+        //     if (!empty($user->email) && $user->id != $id) {
+        //         throw new \Exception(
+        //             MessageConstant::$EMAIL_EXIST,
+        //             BaseHTTPResponse::$BAD_REQUEST
+        //         );
+        //     }
+        // }
 
         // cập nhật lại thông tin thành viên
         $updateMeRequest = [
             'full_name' => empty($updateMeData['fullName']) || !isset($updateMeData['fullName'])
                 ? $user['full_name']
                 : $updateMeData['fullName'],
-            'email' => empty($updateMeData['email']) || !isset($updateMeData['email'])
-                ? $user['email']
-                : $updateMeData['email'],
+            // 'email' => empty($updateMeData['email']) || !isset($updateMeData['email'])
+            //     ? $user['email']
+            //     : $updateMeData['email'],
             'phone' => empty($updateMeData['phone']) || !isset($updateMeData['phone'])
                 ? $user['phone']
                 : $updateMeData['phone'],

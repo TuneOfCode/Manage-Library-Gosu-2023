@@ -51,7 +51,7 @@ abstract class BaseRepository implements IBaseRepository {
      * @return mixed
      */
     public function findOne(mixed $attributes, array $relations = []) {
-        $data = $this->_model::where($attributes)->get();
+        $data = $this->_model::where($attributes)->first();
         if (count($relations) == 0) {
             return $data;
         }

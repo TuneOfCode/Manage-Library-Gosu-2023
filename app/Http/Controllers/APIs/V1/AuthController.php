@@ -200,7 +200,7 @@ class AuthController extends Controller {
         Log::info("***** Cập nhật thông tin thành viên hiện tại *****");
         try {
             // gọi dịch vụ xử lý cập nhật thông tin thành viên hiện tại
-            $data = AuthService::updateMe($request);
+            $data = new AuthResource(AuthService::updateMe($request));
             return $this->success(
                 $request,
                 $data,
