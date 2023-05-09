@@ -49,7 +49,10 @@ class UserController extends Controller {
     public function show(Request $request, string $id) {
         Log::info("***** Lấy chi tiết một người dùng *****");
         try {
-            $data = new UserResource(UserService::getAUser($request, $id));
+            $data = new UserResource(UserService::getAUser(
+                $request,
+                $id
+            ));
             return $this->success(
                 $request,
                 $data,

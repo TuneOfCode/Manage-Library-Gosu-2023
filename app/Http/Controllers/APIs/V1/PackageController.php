@@ -6,6 +6,7 @@ use App\Constants\MessageConstant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Package\StorePackageRequest;
 use App\Http\Requests\V1\Package\UpdatePackageRequest;
+use App\Http\Resources\V1\Auth\AuthResource;
 use App\Http\Resources\V1\Package\PackageResource;
 use App\Http\Resources\V1\Package\PackageResourceCollection;
 use App\Http\Responses\BaseResponse;
@@ -75,7 +76,10 @@ class PackageController extends Controller {
     public function show(Request $request, mixed $id) {
         Log::info("***** Lấy chi tiết một gói ưu đãi *****");
         try {
-            $data = new PackageResource(PackageService::getAPackage($request, $id));
+            $data = new PackageResource(PackageService::getAPackage(
+                $request,
+                $id
+            ));
             return $this->success(
                 $request,
                 $data,
@@ -95,7 +99,10 @@ class PackageController extends Controller {
     public function update(UpdatePackageRequest $request, mixed $id) {
         Log::info("***** Cập nhật một gói ưu đãi *****");
         try {
-            $data = new PackageResource(PackageService::updatePackage($request, $id));
+            $data = new PackageResource(PackageService::updatePackage(
+                $request,
+                $id
+            ));
             return $this->success(
                 $request,
                 $data,
@@ -136,7 +143,10 @@ class PackageController extends Controller {
     public function register(Request $request, mixed $id) {
         Log::info("***** Đăng ký gói ưu đãi *****");
         try {
-            $data = PackageService::registerPackage($request, $id);
+            $data = new AuthResource(PackageService::registerPackage(
+                $request,
+                $id
+            ));
             return $this->success(
                 $request,
                 $data,

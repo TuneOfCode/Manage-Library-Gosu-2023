@@ -117,30 +117,34 @@ class PackageService implements IPackageService {
         $method = $request->getMethod();
         $updatePackageData = [
             'name' => $request->input('name'),
+            'type' => $request->input('type'),
             'price' => $request->input('price'),
+            'discount' => $request->input('discount'),
             'description' => $request->input('description'),
             'is_active' => $request->input('isActive')
         ];
-        $updatePackageData['is_active'] =
-            !empty($updatePackageData['is_active'])
-            && $updatePackageData['is_active'] === "true"
-            || $updatePackageData['is_active'] === "1"
-            ? 1
-            : 0;
-        if ($method == 'PUT') {
-            self::$packageRepo->update($updatePackageData, $id);
-            $package = self::$packageRepo->findById($id);
-            return $package;
-        }
 
+        // kiểm tra gói ưu đãi có tồn tại không
         $package = self::$packageRepo->findById($id);
+        if (empty($package)) {
+            throw new \Exception(
+                MessageConstant::$PACKAGE_NOT_EXIST,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
         $updatePackageData = [
             'name' => empty($updatePackageData['name'])
                 ? $package['name']
                 : $updatePackageData['name'],
+            'type' => empty($updatePackageData['type'])
+                ? $package['type']
+                : $updatePackageData['type'],
             'price' => empty($updatePackageData['price'])
                 ? $package['price']
                 : $updatePackageData['price'],
+            'discount' => empty($updatePackageData['discount'])
+                ? $package['discount']
+                : $updatePackageData['discount'],
             'description' => empty($updatePackageData['description'])
                 ? $package['description']
                 : $updatePackageData['description'],
@@ -148,6 +152,19 @@ class PackageService implements IPackageService {
                 ? $package['is_active']
                 : $updatePackageData['is_active'],
         ];
+        $updatePackageData['is_active'] =
+            !empty($updatePackageData['is_active'])
+            && $updatePackageData['is_active'] === "true"
+            || $updatePackageData['is_active'] === "1"
+            ? 1
+            : 0;
+
+        if ($method == 'PUT') {
+            self::$packageRepo->update($updatePackageData, $id);
+            $package = self::$packageRepo->findById($id);
+            return $package;
+        }
+
         self::$packageRepo->update($updatePackageData, $id);
         return self::$packageRepo->findById($id);
     }
@@ -166,7 +183,7 @@ class PackageService implements IPackageService {
         // trường hợp xoá gói ưu đãi đang được sử dụng
         $users = self::$userRepo->findAll(['package_id' => $id]);
         if (
-            !empty($users)
+            empty($users)
             || count($users) > 0
             || $package['price'] == 0
         ) {

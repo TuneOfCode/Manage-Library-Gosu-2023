@@ -21,14 +21,18 @@ class UpdatePackageRequest extends FormRequest {
         if ($this->method() === 'PUT') {
             return [
                 'name' => ['required', 'string', 'max:255', 'unique:packages'],
+                'type' => ['required', 'string', 'max:50', 'in:normal,brozen,silver,gold'],
                 'price' => ['required', 'numeric', 'min:0'],
+                'discount' => ['required', 'numeric', 'min:0', 'max:100'],
                 'description' => ['required', 'string', 'max:255'],
                 'isActive' => ['required'],
             ];
         }
         return [
             'name' => ['sometimes', 'string', 'max:255', 'unique:packages'],
+            'type' => ['sometimes', 'string', 'max:50', 'in:normal,brozen,silver,gold'],
             'price' => ['sometimes', 'numeric', 'min:0'],
+            'discount' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'description' => ['sometimes', 'string', 'max:255'],
             'isActive' => ['sometimes'],
         ];

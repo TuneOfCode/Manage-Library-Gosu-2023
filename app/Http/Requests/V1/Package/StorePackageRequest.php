@@ -20,6 +20,7 @@ class StorePackageRequest extends FormRequest {
     public function rules(): array {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:packages'],
+            'type' => ['sometimes', 'string', 'max:50', 'in:normal,brozen,silver,gold'],
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['sometimes', 'string', 'max:255'],
         ];
