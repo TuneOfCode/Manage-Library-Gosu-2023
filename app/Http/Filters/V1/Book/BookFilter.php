@@ -11,6 +11,7 @@ class BookFilter extends BaseFilter {
         'categoryId' => ['eq'],
         'description' => ['eq', 'like'],
         'position' => ['eq', 'like'],
+        'label' => ['eq'],
         'quantity' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'price' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'loanPrice' => ['eq', 'gt', 'lt', 'lte', 'gte'],

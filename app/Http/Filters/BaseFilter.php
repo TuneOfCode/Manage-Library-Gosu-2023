@@ -70,7 +70,7 @@ abstract class BaseFilter {
         $relationsRequest = $request->get('relations');
         $relations = !isset($relationsRequest)
             ? []
-            : explode(', ', ($request->get('relations')));
+            : explode(',', ($request->get('relations')));
         foreach ($relations as $key => $relation) {
             $relations[$key] = trim($relation);
         }

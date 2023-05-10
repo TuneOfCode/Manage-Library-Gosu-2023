@@ -54,10 +54,6 @@ class BookService implements IBookService {
                 $sortType,
                 $limit
             );
-            // if ($request->get('type') === 'old') {
-            //     $attributes['sortType'] = 'asc';
-            // }
-            // $result = self::$bookRepo->getAttributesBooks($attributes);
             return $result;
         }
 
@@ -71,11 +67,6 @@ class BookService implements IBookService {
             $sortType,
             $limit
         );
-
-        // if ($request->get('type') === 'old') {
-        //     $attributes['sortType'] = 'asc';
-        // }
-        // $result = self::$bookRepo->getAttributesBooks($attributes);
         return $result;
     }
     /**
@@ -150,6 +141,15 @@ class BookService implements IBookService {
      */
     public static function updateBook(Request $request, mixed $id) {
         $data = $request->all();
+
+        // Kiểm tra sách có tồn tại hay không
+        $book = self::$bookRepo->findById($id);
+        if (empty($book)) {
+            throw new \Exception(
+                MessageConstant::$BOOK_NOT_EXIST,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
 
         // xử lý ngày tháng năm
         $data['status'] = $data['status'] == 'true' || $data['status'] == '1' ? 1 : 0;
