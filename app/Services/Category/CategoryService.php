@@ -52,6 +52,7 @@ class CategoryService implements ICategoryService {
 
         // lấy ra chi tiết gói ưu đãi
         $result = self::$categoryRepo->findById($id, $relations);
+        // dd($result, empty($result));
         if (empty($result)) {
             throw new \Exception(
                 MessageConstant::$CATEGORY_NOT_EXIST,

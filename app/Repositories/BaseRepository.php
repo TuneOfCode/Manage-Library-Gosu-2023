@@ -66,7 +66,12 @@ abstract class BaseRepository implements IBaseRepository {
         if (count($relations) == 0) {
             return $this->_model->find($id);
         }
-        return $this->_model->find($id)->loadMissing($relations);
+
+        $item = $this->_model->find($id);
+        if (empty($item) || !isset($item)) {
+            return null;
+        }
+        return $item->loadMissing($relations);
     }
     /**
      * Tạo môt bản ghi

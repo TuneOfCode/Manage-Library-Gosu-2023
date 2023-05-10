@@ -10,6 +10,7 @@ class PackageFilter extends BaseFilter {
      */
     protected $allowColumns = [
         'name' => ['eq', 'like'],
+        'type' => ['eq'],
         'price' => ['eq', 'lt', 'gt', 'lte', 'gte'],
         'isActive' => ['eq', 'neq'],
     ];
