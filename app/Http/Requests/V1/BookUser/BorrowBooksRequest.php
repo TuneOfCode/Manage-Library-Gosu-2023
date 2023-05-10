@@ -20,7 +20,7 @@ class BorrowBooksRequest extends FormRequest {
     public function rules(): array {
         return [
             'bookIds' => 'required|string',
-            'estimatedReturnedAt' => 'sometimes|date',
+            'estimatedReturnedAt' => 'sometimes|string',
         ];
     }
 }

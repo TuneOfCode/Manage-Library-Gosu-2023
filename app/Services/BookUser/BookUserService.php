@@ -97,11 +97,11 @@ class BookUserService implements IBookUserService {
         $gold = strtolower(PackageType::GOLD()->value);
         switch ($packageType) {
             case $brozen:
-                return 5 / 100; // giảm 5%
+                return 5; // giảm 5%
             case $silver:
-                return 10 / 100; // giảm 10%
+                return 10; // giảm 10%
             case $gold:
-                return 15 / 100; // giảm 15%
+                return 15; // giảm 15%
             default:
                 return 0;
         }
@@ -143,6 +143,14 @@ class BookUserService implements IBookUserService {
             )
             : now()->addWeek();
         $estimatedReturnDate = $date->format(GlobalConstant::$FORMAT_DATETIME_DB);
+
+        // ngày dự kiến trả sách phải lớn hơn ngày hiện tại
+        if ($estimatedReturnDate < now()) {
+            throw new \Exception(
+                MessageConstant::$ESTIMATED_RETURN_DATE_INVALID,
+                BaseHTTPResponse::$BAD_REQUEST
+            );
+        }
         $currentMember = Auth::user();
 
         // kiểm tra điểm uy tín của thành viên (< 50 thì không cho mượn)
@@ -201,6 +209,8 @@ class BookUserService implements IBookUserService {
         }
 
         // thêm vào lịch sử cho thuê sách ở trạng thái đang chờ duyệt
+        $totalMoney = 0;
+        $intoMoney = 0;
         foreach ($bookIds as $bookId) {
             $book = self::$bookRepo->findById($bookId);
             $amount = $statisticsBooks[$bookId]['amount'];
@@ -208,18 +218,24 @@ class BookUserService implements IBookUserService {
             $discount = self::getDiscountByPackageType(
                 $packageType
             );
-            $currentMember->books()->attach($bookId, [
+            $data = [
                 'amount' => $amount,
                 'payment' => $payment,
                 'discount' => $discount,
                 'estimated_returned_at' => $estimatedReturnDate
-            ]);
+            ];
+            $currentMember->books()->attach($bookId, $data);
+            $totalMoney += $payment;
+            $intoMoney += $payment - ($payment * $discount / 100);
         }
 
         // trả lại kết quả
-        $result = self::$bookUserRepo->findOne([
-            'user_id' => $currentMember->id,
-        ], ['user', 'book']);
+        $result = self::$bookUserRepo->findAll(
+            [
+                'user_id' => $currentMember->id,
+            ],
+            ['user', 'book']
+        );
         return $result;
     }
     /**
@@ -336,8 +352,9 @@ class BookUserService implements IBookUserService {
                 'id' => $id,
                 'user_id' => $currentMember->id, // chỉ cho phép thanh toán của thành viên hiện tại
                 'status' => $payingStatus
-            ])->toArray();
-            if (empty($bookUser) || count($ids) !== count($bookUser)) {
+            ]);
+
+            if (empty($bookUser)) {
                 throw new \Exception(
                     MessageConstant::$BOOK_USER_NOT_EXIST
                         . " or " .
@@ -346,12 +363,10 @@ class BookUserService implements IBookUserService {
                 );
             }
 
-            foreach ($bookUser as $item) {
-                $intoMoney += $item['payment']
-                    - ($item['payment'] * $item['discount'] / 100);
-            }
+            $bookUser = $bookUser->getAttributes();
+            $intoMoney += $bookUser['payment']
+                - ($bookUser['payment'] * $bookUser['discount'] / 100);
         }
-
         // kiểm tra số dư tài khoản của thành viên
         if ($currentMember->balance < $intoMoney) {
             throw new \Exception(
@@ -453,8 +468,8 @@ class BookUserService implements IBookUserService {
                 'id' => $id,
                 'user_id' => $currentMember->id,
                 'status' => $pendingStatus
-            ])->toArray();
-            if (empty($bookUser) || count($ids) !== count($bookUser)) {
+            ]);
+            if (empty($bookUser)) {
                 throw new \Exception(
                     MessageConstant::$BOOK_USER_NOT_EXIST
                         . " or " .

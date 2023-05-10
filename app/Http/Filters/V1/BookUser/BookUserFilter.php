@@ -6,13 +6,13 @@ use App\Http\Filters\BaseFilter;
 
 class BookUserFilter extends BaseFilter {
     protected $allowColumns = [
-        'bookId' => ['eq'],
         'userId' => ['eq'],
+        'bookId' => ['eq'],
         'status' => ['eq'],
         'amount' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'payment' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'discount' => ['eq', 'gt', 'lt', 'lte', 'gte'],
-        'unit' => ['eq', 'gt', 'lt', 'lte', 'gte'],
+        'unit' => ['eq', 'like'],
         'extraMoney' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'approvedAt' => ['eq', 'gt', 'lt', 'lte', 'gte'],
         'rejectedAt' => ['eq', 'gt', 'lt', 'lte', 'gte'],
@@ -25,8 +25,9 @@ class BookUserFilter extends BaseFilter {
     ];
 
     protected $columnsMap = [
-        'bookId' => 'book_id',
         'userId' => 'user_id',
+        'bookId' => 'book_id',
+        'extraMoney' => 'extra_money',
         'approvedAt' => 'approved_at',
         'rejectedAt' => 'rejected_at',
         'canceledAt' => 'canceled_at',
